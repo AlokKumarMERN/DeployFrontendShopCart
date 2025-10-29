@@ -203,7 +203,7 @@ const Home = () => {
             className="text-center mb-10"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-              Featured Products
+              Featur Products
             </h2>
             <p className="text-gray-600 text-lg">
               Handpicked items just for you

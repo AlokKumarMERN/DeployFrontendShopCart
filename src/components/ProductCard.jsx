@@ -30,6 +30,13 @@ const ProductCard = ({ product }) => {
       return;
     }
     
+    // If product has size variants, redirect to detail page to select variant
+    if (product.sizes && product.sizes.length > 0) {
+      addToast('Please select size/variant', 'info');
+      navigate(`/product/${product._id}`);
+      return;
+    }
+    
     setIsAdding(true);
     
     try {
@@ -166,6 +173,8 @@ const ProductCard = ({ product }) => {
               </svg>
               Added!
             </span>
+          ) : product.sizes && product.sizes.length > 0 ? (
+            'Select Options'
           ) : (
             'Add to Cart'
           )}

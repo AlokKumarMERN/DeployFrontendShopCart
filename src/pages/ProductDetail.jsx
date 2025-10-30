@@ -90,14 +90,14 @@ const ProductDetail = () => {
   );
   const savings = currentPrice - discountedPrice;
 
-  // Calculate available stock
+  // Calculate available stock - FIXED to properly check variant stock
   const availableStock = selectedSize 
-    ? selectedSize.stock 
+    ? selectedSize.stock  // Use the selected variant's stock
     : product.sizes && product.sizes.length > 0
-      ? product.sizes.reduce((total, size) => total + size.stock, 0)
-      : product.stock;
+      ? product.sizes.reduce((total, size) => total + size.stock, 0) // Total of all variants
+      : product.stock; // Use main stock if no variants
 
-  const isOutOfStock = availableStock === 0;
+  const isOutOfStock = availableStock === 0 || (selectedSize && selectedSize.stock === 0);
 
   const handleAddToCart = () => {
     if (isOutOfStock) {
@@ -283,7 +283,9 @@ const ProductDetail = () => {
                     >
                       <div>{size.label}</div>
                       <div className="text-xs">₹{size.price}</div>
-                      {size.stock === 0 && (
+                      {size.stock > 0 ? (
+                        <div className="text-xs text-green-600">{size.stock} in stock</div>
+                      ) : (
                         <div className="text-xs text-red-500">Out of stock</div>
                       )}
                     </button>

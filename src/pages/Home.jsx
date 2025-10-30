@@ -203,7 +203,7 @@ const Home = () => {
             className="text-center mb-10"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-              Featur Products
+              Featured Products
             </h2>
             <p className="text-gray-600 text-lg">
               Handpicked items just for you
@@ -307,6 +307,89 @@ const Home = () => {
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Gallery Section */}
+      <section className="py-16 bg-gradient-to-b from-gray-50 to-white">
+        <div className="container-custom">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+              Our Store Gallery
+            </h2>
+            <p className="text-gray-600 text-lg">
+              Take a glimpse into our vibrant shopping experience
+            </p>
+          </motion.div>
+
+          {/* Gallery Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {[
+              { url: 'https://i.ibb.co/GvwtkQ1C/ShopFour.jpg', span: 'col-span-2' },
+              { url: 'https://i.ibb.co/SDLNTWmt/Shop-Seven.jpg', span: 'md:col-span-2' },
+              { url: 'https://i.ibb.co/FLvqcX0S/ShopTwo.jpg', span: 'md:col-span-2 md:row-span-2' },
+              { url: 'https://i.ibb.co/gFbbyxB9/Shop-Three.jpg', span: '' },
+              { url: 'https://i.ibb.co/jZ3N2GC8/ShopSix.jpg', span: '' },
+              { url: 'https://i.ibb.co/N6YC4yrD/ShopOne.jpg', span: '' },
+              { url: 'https://i.ibb.co/LhkQ9G78/ShopFive.jpg', span: '' },
+            ].map((image, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1, duration: 0.5 }}
+                whileHover={{ scale: 1.05, zIndex: 10 }}
+                className={`relative overflow-hidden rounded-lg shadow-lg group cursor-pointer ${image.span}`}
+              >
+                <div className="aspect-square overflow-hidden bg-gray-200">
+                  <img
+                    src={image.url}
+                    alt={`Store gallery ${index + 1}`}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = '/images/products/placeholder.svg';
+                    }}
+                  />
+                </div>
+                {/* Overlay on hover */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-6">
+                  <span className="text-white font-semibold text-lg">
+                    View Image
+                  </span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Call to Action */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.5 }}
+            className="text-center mt-12"
+          >
+            <p className="text-gray-700 text-lg mb-6">
+              Visit our store to experience quality products and excellent service
+            </p>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => window.location.href = '/shopping'}
+              className="bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all"
+            >
+              Start Shopping
+            </motion.button>
+          </motion.div>
         </div>
       </section>
     </div>

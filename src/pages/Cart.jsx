@@ -82,7 +82,6 @@ const Cart = () => {
           })
         );
         
-        console.log('Fetched stock data:', stockData);
         setProductsStock(stockData);
         setLoadingStock(false);
       } catch (error) {

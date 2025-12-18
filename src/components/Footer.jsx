@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const { user, isAuthenticated } = useAuth();
 
   return (
     <footer className="bg-gray-900 text-gray-300 mt-auto">
@@ -215,9 +217,26 @@ const Footer = () => {
                     d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                   />
                 </svg>
-                <a href="mailto:connect2alokgupta@gmail.com" className="hover:text-white transition-colors">
-                  connect2alokgupta@gmail.com
-                </a>
+                {isAuthenticated && user ? (
+                  <a
+                    href={`https://mail.google.com/mail/?view=cm&fs=1&to=connect2alokgupta@gmail.com&su=${encodeURIComponent('Inquiry from Alok General Store')}&body=${encodeURIComponent(`Hi Alok,\n\nI am ${user.name} and I would like to inquire about...\n\nFrom: ${user.email}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-white transition-colors"
+                    title="Send us an email"
+                  >
+                    connect2alokgupta@gmail.com
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => navigate('/login?redirect=contact-email')}
+                    className="hover:text-white transition-colors cursor-pointer text-left"
+                    title="Login to send email"
+                  >
+                    connect2alokgupta@gmail.com
+                  </button>
+                )}
               </li>
               <li className="flex items-center gap-2 text-sm">
                 <svg

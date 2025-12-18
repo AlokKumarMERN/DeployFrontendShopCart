@@ -52,7 +52,15 @@ const Login = () => {
 
     if (result.success) {
       const redirect = searchParams.get('redirect');
-      navigate(redirect === 'cart' ? '/cart' : '/profile');
+      
+      // Redirect based on where they came from
+      if (redirect === 'contact-email') {
+        navigate('/');
+      } else if (redirect === 'cart') {
+        navigate('/cart');
+      } else {
+        navigate('/profile');
+      }
     } else {
       setError(result.message);
     }

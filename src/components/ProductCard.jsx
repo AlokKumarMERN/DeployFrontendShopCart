@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
@@ -8,6 +9,7 @@ import { getGoogleDriveImageUrl } from '../utils/imageHelper';
 const ProductCard = ({ product }) => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { isAuthenticated } = useAuth();
   const { addToast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
 
@@ -24,6 +26,13 @@ const ProductCard = ({ product }) => {
 
   const handleAddToCart = (e) => {
     e.stopPropagation();
+    
+    // Check if user is logged in first
+    if (!isAuthenticated) {
+      addToast('Please login to add items to cart', 'error');
+      navigate('/login');
+      return;
+    }
     
     if (isOutOfStock) {
       addToast('Product is out of stock', 'error');

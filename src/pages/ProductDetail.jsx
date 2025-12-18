@@ -100,6 +100,13 @@ const ProductDetail = () => {
   const isOutOfStock = availableStock === 0 || (selectedSize && selectedSize.stock === 0);
 
   const handleAddToCart = () => {
+    // Check if user is logged in first
+    if (!isAuthenticated) {
+      addToast('Please login to add items to cart', 'error');
+      navigate('/login');
+      return;
+    }
+    
     if (isOutOfStock) {
       addToast('Product is out of stock', 'error');
       return;
@@ -111,6 +118,13 @@ const ProductDetail = () => {
   };
 
   const handleBuyNow = () => {
+    // Check if user is logged in first
+    if (!isAuthenticated) {
+      addToast('Please login to add items to cart', 'error');
+      navigate('/login');
+      return;
+    }
+    
     if (isOutOfStock) {
       addToast('Product is out of stock', 'error');
       return;

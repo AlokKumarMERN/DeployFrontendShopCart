@@ -14,7 +14,7 @@ const AdminProducts = () => {
   const [categoryFilter, setCategoryFilter] = useState('');
 
   useEffect(() => {
-    if (!isAuthenticated || user?.email !== 'adminalok@gmail.com') {
+    if (!isAuthenticated || user?.role !== 'admin') {
       navigate('/profile');
       return;
     }
@@ -56,7 +56,7 @@ const AdminProducts = () => {
 
   const categories = [...new Set(products.map((p) => p.category))];
 
-  if (!isAuthenticated || user?.email !== 'adminalok@gmail.com') {
+  if (!isAuthenticated || user?.role !== 'admin') {
     return null;
   }
 

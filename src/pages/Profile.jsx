@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import { ordersAPI, authAPI } from '../api/api';
 import { getGoogleDriveImageUrl } from '../utils/imageHelper';
 
 const Profile = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout, updateUser } = useAuth();
+  const { clearCart } = useCart();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('orders');
@@ -52,7 +54,7 @@ const Profile = () => {
   };
 
   const handleLogout = () => {
-    logout();
+    logout(clearCart);
     navigate('/');
   };
 
@@ -201,7 +203,7 @@ const Profile = () => {
               <p className="text-gray-600">{user?.email}</p>
             </div>
             <div className="flex gap-3">
-              {user?.email === 'adminalok@gmail.com' && (
+              {user?.role === 'admin' && (
                 <button
                   onClick={() => navigate('/admin')}
                   className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"

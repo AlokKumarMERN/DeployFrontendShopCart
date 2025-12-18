@@ -45,6 +45,9 @@ export const authAPI = {
   login: (data) => api.post('/auth/login', data),
   getProfile: () => api.get('/auth/profile'),
   updateAddresses: (addresses) => api.put('/auth/addresses', { addresses }),
+  forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
+  resetPassword: (token, password) => api.post(`/auth/reset-password/${token}`, { password }),
+  verifyResetToken: (token) => api.get(`/auth/verify-reset-token/${token}`),
 };
 
 // Products API
@@ -72,6 +75,13 @@ export const ordersAPI = {
 // Contact API
 export const contactAPI = {
   submitFeedback: (data) => api.post('/contact/feedback', data),
+};
+
+// Cart API
+export const cartAPI = {
+  get: () => api.get('/cart'),
+  update: (cart) => api.put('/cart', { cart }),
+  clear: () => api.delete('/cart'),
 };
 
 export default api;

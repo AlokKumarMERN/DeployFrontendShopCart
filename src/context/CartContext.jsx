@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { cartAPI } from '../api/api';
 
 const CartContext = createContext();
 
@@ -12,18 +13,100 @@ export const useCart = () => {
 
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Load cart from localStorage on mount
+  // Load cart from backend when user is logged in
+  const loadCartFromBackend = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setCartItems([]);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const response = await cartAPI.get();
+      if (response.data.success) {
+        const backendCart = response.data.data || [];
+        
+        // Map backend cart format to frontend format
+        const cartForFrontend = backendCart.map(item => ({
+          _id: item.productId,
+          name: item.name,
+          image: item.image,
+          price: item.price,
+          originalPrice: item.originalPrice,
+          quantity: item.quantity,
+          selectedSize: item.selectedSize,
+          category: item.category,
+        }));
+        
+        setCartItems(cartForFrontend);
+        // Update localStorage to match backend
+        localStorage.setItem('cart', JSON.stringify(cartForFrontend));
+      }
+    } catch (error) {
+      console.error('Failed to load cart from backend:', error);
+      // If backend fails, start with empty cart when logged in
+      setCartItems([]);
+      localStorage.removeItem('cart');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Save cart to backend
+  const saveCartToBackend = async (items) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      // Map cart items to match backend schema
+      const cartForBackend = items.map(item => ({
+        productId: item._id,
+        name: item.name,
+        image: item.image,
+        price: item.price,
+        originalPrice: item.originalPrice,
+        quantity: item.quantity,
+        selectedSize: item.selectedSize,
+        category: item.category,
+      }));
+      
+      await cartAPI.update(cartForBackend);
+    } catch (error) {
+      console.error('Failed to save cart to backend:', error);
+    }
+  };
+
+  // Load cart on mount
   useEffect(() => {
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-      setCartItems(JSON.parse(savedCart));
+    const token = localStorage.getItem('token');
+    if (token) {
+      // User is logged in, load from backend
+      loadCartFromBackend();
+    } else {
+      // User is not logged in, load from localStorage
+      const savedCart = localStorage.getItem('cart');
+      if (savedCart) {
+        setCartItems(JSON.parse(savedCart));
+      }
     }
   }, []);
 
-  // Save cart to localStorage whenever it changes
+  // Save cart to localStorage and backend whenever it changes
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cartItems));
+    
+    const token = localStorage.getItem('token');
+    if (token && cartItems.length >= 0) {
+      // Debounce the backend save
+      const timeoutId = setTimeout(() => {
+        saveCartToBackend(cartItems);
+      }, 500);
+      
+      return () => clearTimeout(timeoutId);
+    }
   }, [cartItems]);
 
   const addToCart = (product, quantity = 1, selectedSize = null) => {
@@ -94,9 +177,19 @@ export const CartProvider = ({ children }) => {
     });
   };
 
-  const clearCart = () => {
+  const clearCart = async () => {
     setCartItems([]);
     localStorage.removeItem('cart');
+    
+    // Clear from backend if user is logged in
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        await cartAPI.clear();
+      } catch (error) {
+        console.error('Failed to clear cart from backend:', error);
+      }
+    }
   };
 
   const getCartTotal = () => {
@@ -115,6 +208,8 @@ export const CartProvider = ({ children }) => {
     clearCart,
     getCartTotal,
     getCartCount,
+    loadCartFromBackend,
+    isLoading,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

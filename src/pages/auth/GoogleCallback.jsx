@@ -1,12 +1,14 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
 
 const GoogleCallback = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { login } = useAuth();
+  const { loadCartFromBackend } = useCart();
   const { addToast } = useToast();
 
   useEffect(() => {
@@ -28,6 +30,9 @@ const GoogleCallback = () => {
           // Store token and user data
           localStorage.setItem('token', token);
           localStorage.setItem('user', JSON.stringify(userData));
+          
+          // Load cart from backend
+          setTimeout(() => loadCartFromBackend(), 100);
           
           addToast(`Welcome ${userData.name}!`, 'success');
           navigate('/profile');

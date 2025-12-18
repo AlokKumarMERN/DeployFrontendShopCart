@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }) => {
     initAuth();
   }, []);
 
-  const login = async (email, password) => {
+  const login = async (email, password, loadCart) => {
     try {
       const response = await authAPI.login({ email, password });
       const { data } = response.data;
@@ -43,6 +43,11 @@ export const AuthProvider = ({ children }) => {
       setToken(data.token);
       setUser(data);
 
+      // Load cart from backend after login if loadCart function is provided
+      if (loadCart && typeof loadCart === 'function') {
+        setTimeout(() => loadCart(), 100);
+      }
+
       return { success: true, data };
     } catch (error) {
       const message =
@@ -51,7 +56,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const signup = async (name, email, password) => {
+  const signup = async (name, email, password, loadCart) => {
     try {
       const response = await authAPI.signup({ name, email, password });
       const { data } = response.data;
@@ -62,6 +67,11 @@ export const AuthProvider = ({ children }) => {
       setToken(data.token);
       setUser(data);
 
+      // Load cart from backend after signup if loadCart function is provided
+      if (loadCart && typeof loadCart === 'function') {
+        setTimeout(() => loadCart(), 100);
+      }
+
       return { success: true, data };
     } catch (error) {
       const message =
@@ -70,11 +80,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = (clearCart) => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('cart');
     setToken(null);
     setUser(null);
+    
+    // Clear cart if clearCart function is provided
+    if (clearCart && typeof clearCart === 'function') {
+      clearCart();
+    }
   };
 
   const updateUserAddresses = async (addresses) => {

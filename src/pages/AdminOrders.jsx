@@ -20,7 +20,7 @@ const AdminOrders = () => {
   });
 
   useEffect(() => {
-    if (!isAuthenticated || user?.email !== 'adminalok@gmail.com') {
+    if (!isAuthenticated || user?.role !== 'admin') {
       navigate('/profile');
       return;
     }
@@ -106,7 +106,7 @@ const AdminOrders = () => {
     }
   };
 
-  if (!isAuthenticated || user?.email !== 'adminalok@gmail.com') return null;
+  if (!isAuthenticated || user?.role !== 'admin') return null;
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">

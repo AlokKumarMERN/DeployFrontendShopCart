@@ -25,7 +25,7 @@ const AdminProductForm = () => {
   const categories = ['Perfumes', 'Gifts', 'Cosmetics', 'Toys', 'Bangles', 'Belts', 'Watches', 'Caps', 'Birthday Items'];
 
   useEffect(() => {
-    if (!isAuthenticated || user?.email !== 'adminalok@gmail.com') {
+    if (!isAuthenticated || user?.role !== 'admin') {
       navigate('/profile');
       return;
     }
@@ -150,7 +150,7 @@ const AdminProductForm = () => {
     setHasSizes(!hasSizes);
   };
 
-  if (!isAuthenticated || user?.email !== 'adminalok@gmail.com') return null;
+  if (!isAuthenticated || user?.role !== 'admin') return null;
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">

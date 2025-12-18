@@ -1,13 +1,15 @@
 import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 
 const Login = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { login } = useAuth();
+  const { loadCartFromBackend } = useCart();
   const { addToast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -46,7 +48,7 @@ const Login = () => {
     setError('');
     setLoading(true);
 
-    const result = await login(formData.email, formData.password);
+    const result = await login(formData.email, formData.password, loadCartFromBackend);
 
     if (result.success) {
       const redirect = searchParams.get('redirect');
@@ -120,6 +122,15 @@ const Login = () => {
           >
             {loading ? 'Logging in...' : 'Login'}
           </button>
+
+          <div className="text-right mt-2">
+            <Link
+              to="/forgot-password"
+              className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+            >
+              Forgot password?
+            </Link>
+          </div>
         </form>
 
         {/* Divider */}

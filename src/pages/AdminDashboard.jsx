@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import { productsAPI, ordersAPI } from '../api/api';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
+  const { clearCart } = useCart();
   const [stats, setStats] = useState({
     totalProducts: 0,
     featuredProducts: 0,
@@ -17,7 +19,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!isAuthenticated || user?.email !== 'adminalok@gmail.com') {
+    if (!isAuthenticated || user?.role !== 'admin') {
       navigate('/profile');
       return;
     }
@@ -50,11 +52,11 @@ const AdminDashboard = () => {
   };
 
   const handleLogout = () => {
-    logout();
+    logout(clearCart);
     navigate('/');
   };
 
-  if (!isAuthenticated || user?.email !== 'adminalok@gmail.com') {
+  if (!isAuthenticated || user?.role !== 'admin') {
     return null;
   }
 

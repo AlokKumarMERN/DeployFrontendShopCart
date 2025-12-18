@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 
 const Signup = () => {
   const navigate = useNavigate();
   const { signup } = useAuth();
+  const { loadCartFromBackend } = useCart();
   const { addToast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -59,7 +61,7 @@ const Signup = () => {
 
     setLoading(true);
 
-    const result = await signup(formData.name, formData.email, formData.password);
+    const result = await signup(formData.name, formData.email, formData.password, loadCartFromBackend);
 
     if (result.success) {
       navigate('/profile');

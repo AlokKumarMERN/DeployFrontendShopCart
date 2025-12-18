@@ -79,7 +79,7 @@ const Home = () => {
             className="text-center text-white"
           >
             <h1 className="text-4xl md:text-6xl font-bold mb-4">
-              Welcome to Alok General Store
+              Welcome to Alok General Store Testing
             </h1>
             <p className="text-xl md:text-2xl mb-6 opacity-90">
               Your Trusted Shopping Destination

@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { ordersAPI, productsAPI } from '../api/api';
 import { getGoogleDriveImageUrl } from '../utils/imageHelper';
+import LocationPicker from '../components/LocationPicker';
 
 const Cart = () => {
   const navigate = useNavigate();
@@ -28,6 +29,22 @@ const Cart = () => {
     state: '',
     zipCode: '',
   });
+
+  // Handle location detection for address
+  const handleLocationSelect = (locationData) => {
+    console.log('📍 Location detected in Cart:', locationData);
+    setAddress(prev => {
+      const updated = {
+        ...prev,
+        city: locationData.city || prev.city,
+        state: locationData.state || prev.state,
+        zipCode: locationData.zipCode || prev.zipCode,
+        addressLine1: locationData.streetAddress || prev.addressLine1,
+      };
+      console.log('✅ Cart address updated:', updated);
+      return updated;
+    });
+  };
 
   // Fetch real-time stock data for cart items
   useEffect(() => {
@@ -618,6 +635,18 @@ const Cart = () => {
                       </button>
                     </div>
                   )}
+
+                  {/* Location Detection Button */}
+                  <div className="mb-6 pb-6 border-b">
+                    <LocationPicker 
+                      onLocationSelect={handleLocationSelect}
+                      buttonText="📍 Detect My Location"
+                    />
+                    <p className="mt-2 text-sm text-gray-500">
+                      Click to auto-fill city, state, and pincode from your current location
+                    </p>
+                  </div>
+
                   <div className="space-y-4">
                     <input
                       type="text"

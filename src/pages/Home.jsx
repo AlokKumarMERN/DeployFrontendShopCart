@@ -66,29 +66,29 @@ const Home = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
-        className="relative h-[30vh] bg-gradient-to-r from-primary-700 via-primary-600 to-secondary-600 overflow-hidden"
+        className="relative h-[40vh] md:h-[50vh] bg-gradient-to-r from-primary-700 via-primary-600 to-secondary-600 overflow-hidden"
       >
         <div className="absolute inset-0 opacity-20">
           <div className="absolute inset-0 bg-[url('/images/hero-pattern.png')] bg-repeat opacity-30" />
         </div>
-        <div className="container-custom h-full flex items-center justify-center relative z-10">
+        <div className="container-custom h-full flex items-center justify-center relative z-10 px-4">
           <motion.div
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.8 }}
-            className="text-center text-white"
+            className="text-center text-white w-full flex flex-col items-center"
           >
-            <h1 className="text-4xl md:text-6xl font-bold mb-4">
-              Welcome to Alok General Store Testing
+            <h1 className="text-xl sm:text-3xl md:text-6xl font-bold mb-3 md:mb-4 leading-tight">
+              Welcome to Alok General Store
             </h1>
-            <p className="text-xl md:text-2xl mb-6 opacity-90">
+            <p className="text-sm sm:text-base md:text-2xl mb-4 md:mb-6 opacity-90">
               Your Trusted Shopping Destination
             </p>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => window.location.href = '/shopping'}
-              className="bg-white text-primary-600 font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all"
+              className="bg-white text-primary-600 font-bold py-2.5 px-6 md:py-3 md:px-8 rounded-full shadow-lg hover:shadow-xl transition-all text-sm md:text-base"
             >
               Shop Now
             </motion.button>
@@ -106,7 +106,7 @@ const Home = () => {
             repeat: Infinity,
             ease: 'linear',
           }}
-          className="absolute top-10 right-10 w-32 h-32 bg-white opacity-10 rounded-full"
+          className="absolute top-5 right-5 md:top-10 md:right-10 w-20 h-20 md:w-32 md:h-32 bg-white opacity-10 rounded-full"
         />
         <motion.div
           animate={{
@@ -118,14 +118,14 @@ const Home = () => {
             repeat: Infinity,
             ease: 'linear',
           }}
-          className="absolute bottom-10 left-10 w-24 h-24 bg-white opacity-10 rounded-full"
+          className="absolute bottom-5 left-5 md:bottom-10 md:left-10 w-16 h-16 md:w-24 md:h-24 bg-white opacity-10 rounded-full"
         />
       </motion.section>
 
       {/* Offer Banners Slider */}
-      <section className="bg-white py-8">
-        <div className="container-custom">
-          <div className="relative overflow-hidden rounded-xl">
+      <section className="bg-white py-6 md:py-8">
+        <div className="container-custom px-4">
+          <div className="relative overflow-hidden rounded-2xl shadow-xl">
             <motion.div
               className="flex"
               animate={{ x: `-${currentBanner * 100}%` }}
@@ -134,30 +134,32 @@ const Home = () => {
               {offerBanners.map((banner, index) => (
                 <div
                   key={index}
-                  className={`min-w-full ${banner.bg} text-white py-12 px-6 text-center`}
+                  className={`min-w-full ${banner.bg} text-white py-6 md:py-8 px-6 flex items-center justify-center`}
                 >
-                  <motion.h2
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                    className="text-3xl md:text-4xl font-bold mb-2"
-                  >
-                    {banner.title}
-                  </motion.h2>
-                  <motion.p
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                    className="text-lg md:text-xl opacity-90"
-                  >
-                    {banner.subtitle}
-                  </motion.p>
+                  <div className="w-full max-w-[80%] text-center">
+                    <motion.h2
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                      className="text-2xl md:text-4xl font-bold mb-1 md:mb-1.5"
+                    >
+                      {banner.title}
+                    </motion.h2>
+                    <motion.p
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.3 }}
+                      className="text-sm md:text-xl opacity-90"
+                    >
+                      {banner.subtitle}
+                    </motion.p>
+                  </div>
                 </div>
               ))}
             </motion.div>
 
             {/* Banner indicators */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+            <div className="absolute bottom-3 md:bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
               {offerBanners.map((_, index) => (
                 <button
                   key={index}
@@ -173,18 +175,18 @@ const Home = () => {
           </div>
 
           {/* Horizontal Sliding Offer Cards */}
-          <div className="mt-8 overflow-x-auto scrollbar-hide">
-            <div className="flex gap-4 pb-4">
+          <div className="mt-6 md:mt-8 overflow-x-auto scrollbar-hide -mx-4 px-4">
+            <div className="flex gap-3 md:gap-4 pb-4">
               {offerBanners.slice(0, 4).map((banner, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, x: 50 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className={`flex-shrink-0 w-[300px] ${banner.bg} text-white rounded-lg p-6 shadow-lg`}
+                  className={`flex-shrink-0 w-[250px] md:w-[300px] ${banner.bg} text-white rounded-xl p-5 md:p-6 shadow-lg`}
                 >
-                  <h3 className="text-2xl font-bold mb-2">{banner.title}</h3>
-                  <p className="opacity-90">{banner.subtitle}</p>
+                  <h3 className="text-xl md:text-2xl font-bold mb-1.5 md:mb-2">{banner.title}</h3>
+                  <p className="text-sm md:text-base opacity-90">{banner.subtitle}</p>
                 </motion.div>
               ))}
             </div>
@@ -193,31 +195,31 @@ const Home = () => {
       </section>
 
       {/* Featured Products */}
-      <section className="py-12 bg-gray-50">
-        <div className="container-custom">
+      <section className="py-8 md:py-12 bg-gray-50">
+        <div className="container-custom px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-center mb-10"
+            className="text-center mb-6 md:mb-10"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+            <h2 className="text-2xl md:text-4xl font-bold text-gray-900 mb-2 md:mb-3">
               Featured Products
             </h2>
-            <p className="text-gray-600 text-lg">
+            <p className="text-sm md:text-lg text-gray-600">
               Handpicked items just for you
             </p>
           </motion.div>
 
           {loading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
               {[...Array(18)].map((_, i) => (
-                <div key={i} className="card p-4 animate-pulse">
-                  <div className="aspect-square bg-gray-200 rounded mb-4" />
-                  <div className="h-4 bg-gray-200 rounded mb-2" />
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" />
-                  <div className="h-8 bg-gray-200 rounded" />
+                <div key={i} className="card p-3 md:p-4 animate-pulse rounded-xl">
+                  <div className="aspect-square bg-gray-200 rounded-lg mb-3 md:mb-4" />
+                  <div className="h-3 md:h-4 bg-gray-200 rounded mb-2" />
+                  <div className="h-3 md:h-4 bg-gray-200 rounded w-3/4 mb-2" />
+                  <div className="h-6 md:h-8 bg-gray-200 rounded" />
                 </div>
               ))}
             </div>
@@ -233,7 +235,7 @@ const Home = () => {
                   },
                 },
               }}
-              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
+              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4"
             >
               {featuredProducts.map((product) => (
                 <motion.div
@@ -250,26 +252,26 @@ const Home = () => {
           )}
 
           {!loading && featuredProducts.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-gray-600 text-lg">No featured products available</p>
+            <div className="text-center py-8 md:py-12">
+              <p className="text-gray-600 text-base md:text-lg">No featured products available</p>
             </div>
           )}
         </div>
       </section>
 
       {/* Why Choose Us Section */}
-      <section className="py-12 bg-white">
-        <div className="container-custom">
+      <section className="py-8 md:py-12 bg-white">
+        <div className="container-custom px-4">
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-3xl font-bold text-center mb-10"
+            className="text-2xl md:text-3xl font-bold text-center mb-6 md:mb-10"
           >
             Why Shop With Us?
           </motion.h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-8">
             {[
               {
                 icon: '🚚',
@@ -299,11 +301,11 @@ const Home = () => {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ y: -5 }}
-                className="text-center p-6 card"
+                className="text-center p-4 md:p-6 card bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-md"
               >
-                <div className="text-5xl mb-4">{feature.icon}</div>
-                <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
-                <p className="text-gray-600">{feature.desc}</p>
+                <div className="text-3xl md:text-5xl mb-2 md:mb-4">{feature.icon}</div>
+                <h3 className="text-sm md:text-xl font-bold mb-1 md:mb-2">{feature.title}</h3>
+                <p className="text-xs md:text-base text-gray-600">{feature.desc}</p>
               </motion.div>
             ))}
           </div>

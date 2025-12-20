@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { ordersAPI, authAPI } from '../api/api';
 import { getGoogleDriveImageUrl } from '../utils/imageHelper';
+import LocationPicker from '../components/LocationPicker';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -116,6 +117,23 @@ const Profile = () => {
       });
     }
     setShowAddressModal(true);
+  };
+
+  const handleLocationSelect = (locationData) => {
+    console.log('📍 Location data received in Profile:', locationData);
+    
+    // Auto-fill address fields with detected location
+    setAddressForm(prev => {
+      const updated = {
+        ...prev,
+        city: locationData.city || prev.city,
+        state: locationData.state || prev.state,
+        zipCode: locationData.zipCode || prev.zipCode,
+        addressLine1: locationData.streetAddress || prev.addressLine1,
+      };
+      console.log('✅ Updated address form:', updated);
+      return updated;
+    });
   };
 
   const handleSaveAddress = async () => {
@@ -590,6 +608,18 @@ const Profile = () => {
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
                 {editingAddress !== null ? 'Edit Address' : 'Add New Address'}
               </h2>
+
+              {/* Location Detection Button */}
+              <div className="mb-6 pb-6 border-b">
+                <LocationPicker 
+                  onLocationSelect={handleLocationSelect}
+                  buttonText="📍 Detect My Location"
+                />
+                <p className="mt-2 text-sm text-gray-500">
+                  Click to auto-fill city, state, and pincode from your current location
+                </p>
+              </div>
+
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>

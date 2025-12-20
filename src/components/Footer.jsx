@@ -183,7 +183,13 @@ const Footer = () => {
                     d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                   />
                 </svg>
-                <span>Main Road, Barauli, Gopalganj, Pin code 841405</span>
+                <Link
+                  to="/contact#location"
+                  className="hover:text-white transition-colors cursor-pointer"
+                  title="View our location on map"
+                >
+                  Main Road, Barauli, Gopalganj, Pin code 841405
+                </Link>
               </li>
               <li className="flex items-center gap-2 text-sm">
                 <svg

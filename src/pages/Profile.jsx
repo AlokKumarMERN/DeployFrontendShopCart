@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { ordersAPI, authAPI } from '../api/api';
+import { ordersAPI, authAPI, productsAPI } from '../api/api';
 import { getGoogleDriveImageUrl } from '../utils/imageHelper';
 import LocationPicker from '../components/LocationPicker';
 
@@ -29,6 +29,10 @@ const Profile = () => {
     state: '',
     zipCode: '',
   });
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewProduct, setReviewProduct] = useState(null);
+  const [reviewData, setReviewData] = useState({ rating: 5, comment: '' });
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -97,6 +101,32 @@ const Profile = () => {
       alert(error.response?.data?.message || 'Failed to cancel order');
     } finally {
       setCancelling(false);
+    }
+  };
+
+  const openReviewModal = (item) => {
+    const productId = typeof item.product === 'object' ? item.product._id : item.product;
+    setReviewProduct({ id: productId, name: item.name, image: item.image });
+    setReviewData({ rating: 5, comment: '' });
+    setShowReviewModal(true);
+  };
+
+  const handleSubmitReview = async () => {
+    if (!reviewData.comment.trim()) {
+      alert('Please write a comment');
+      return;
+    }
+
+    try {
+      setSubmittingReview(true);
+      await productsAPI.addReview(reviewProduct.id, reviewData);
+      setShowReviewModal(false);
+      alert('Thank you for your review!');
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      alert(error.response?.data?.message || 'Failed to submit review');
+    } finally {
+      setSubmittingReview(false);
     }
   };
 
@@ -344,41 +374,59 @@ const Profile = () => {
                     {/* Order Items */}
                     <div className="space-y-3 mb-4">
                       {order.items && order.items.map((item, idx) => (
-                        <div 
-                          key={idx} 
-                          className="flex gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
-                          onClick={() => {
-                            const productId = typeof item.product === 'object' ? item.product._id : item.product;
-                            if (productId) {
-                              window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-                              document.documentElement.scrollTop = 0;
-                              document.body.scrollTop = 0;
-                              navigate(`/product/${productId}`);
-                            }
-                          }}
-                        >
-                          {item.image && (
-                            <img
-                              src={getGoogleDriveImageUrl(item.image)}
-                              alt={item.name || 'Product'}
-                              className="w-16 h-16 object-cover rounded hover:scale-105 transition-transform"
-                              crossOrigin="anonymous"
-                              onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = '/images/products/placeholder.svg';
-                              }}
-                            />
-                          )}
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-900 hover:text-primary-600 transition-colors">{item.name}</p>
-                            <p className="text-sm text-gray-600">
-                              Qty: {item.quantity} × ₹{(item.price || 0).toFixed(2)}
-                              {item.size && ` (${item.size})`}
+                        <div key={idx} className="border-b pb-3 last:border-b-0">
+                          <div 
+                            className="flex gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
+                            onClick={() => {
+                              const productId = typeof item.product === 'object' ? item.product._id : item.product;
+                              if (productId) {
+                                window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                                document.documentElement.scrollTop = 0;
+                                document.body.scrollTop = 0;
+                                navigate(`/product/${productId}`);
+                              }
+                            }}
+                          >
+                            {item.image && (
+                              <img
+                                src={getGoogleDriveImageUrl(item.image)}
+                                alt={item.name || 'Product'}
+                                className="w-16 h-16 object-cover rounded hover:scale-105 transition-transform"
+                                crossOrigin="anonymous"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = '/images/products/placeholder.svg';
+                                }}
+                              />
+                            )}
+                            <div className="flex-1">
+                              <p className="font-medium text-gray-900 hover:text-primary-600 transition-colors">{item.name}</p>
+                              <p className="text-sm text-gray-600">
+                                Qty: {item.quantity} × ₹{(item.price || 0).toFixed(2)}
+                                {item.size && ` (${item.size})`}
+                              </p>
+                            </div>
+                            <p className="font-semibold text-gray-900">
+                              ₹{(item.subtotal || 0).toFixed(2)}
                             </p>
                           </div>
-                          <p className="font-semibold text-gray-900">
-                            ₹{(item.subtotal || 0).toFixed(2)}
-                          </p>
+                          {/* Review Button for Delivered Orders */}
+                          {order.orderStatus === 'Delivered' && (
+                            <div className="mt-2 flex justify-end">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openReviewModal(item);
+                                }}
+                                className="text-sm bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                              >
+                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                Write Review
+                              </button>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -729,6 +777,120 @@ const Profile = () => {
                   className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium"
                 >
                   Save Address
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Review Modal */}
+      <AnimatePresence>
+        {showReviewModal && reviewProduct && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            onClick={() => setShowReviewModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold text-gray-900">Write a Review</h2>
+                <button
+                  onClick={() => setShowReviewModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Product Info */}
+              <div className="flex items-center gap-3 mb-6 p-3 bg-gray-50 rounded-lg">
+                {reviewProduct.image && (
+                  <img
+                    src={getGoogleDriveImageUrl(reviewProduct.image)}
+                    alt={reviewProduct.name}
+                    className="w-16 h-16 object-cover rounded"
+                    crossOrigin="anonymous"
+                  />
+                )}
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">{reviewProduct.name}</p>
+                </div>
+              </div>
+
+              {/* Rating */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Your Rating *
+                </label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setReviewData({ ...reviewData, rating: star })}
+                      className="focus:outline-none transition-transform hover:scale-110"
+                    >
+                      <svg
+                        className={`w-10 h-10 ${
+                          star <= reviewData.rating ? 'text-yellow-400' : 'text-gray-300'
+                        }`}
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    </button>
+                  ))}
+                </div>
+                <p className="text-sm text-gray-500 mt-2">
+                  {reviewData.rating === 1 && 'Poor'}
+                  {reviewData.rating === 2 && 'Fair'}
+                  {reviewData.rating === 3 && 'Good'}
+                  {reviewData.rating === 4 && 'Very Good'}
+                  {reviewData.rating === 5 && 'Excellent'}
+                </p>
+              </div>
+
+              {/* Comment */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Your Review *
+                </label>
+                <textarea
+                  value={reviewData.comment}
+                  onChange={(e) => setReviewData({ ...reviewData, comment: e.target.value })}
+                  placeholder="Share your experience with this product..."
+                  rows={4}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 resize-none"
+                />
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowReviewModal(false)}
+                  disabled={submittingReview}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmitReview}
+                  disabled={submittingReview}
+                  className="flex-1 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submittingReview ? 'Submitting...' : 'Submit Review'}
                 </button>
               </div>
             </motion.div>

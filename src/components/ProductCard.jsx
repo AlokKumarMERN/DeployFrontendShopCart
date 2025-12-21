@@ -70,16 +70,18 @@ const ProductCard = ({ product }) => {
 
   return (
     <motion.div
-      whileHover={{ y: -5 }}
-      className="card overflow-hidden cursor-pointer"
+      whileHover={{ y: -8, transition: { duration: 0.3 } }}
+      className="card overflow-hidden cursor-pointer group shadow-md hover:shadow-2xl transition-shadow duration-300"
       onClick={handleClick}
     >
       {/* Product Image */}
       <div className="relative aspect-square overflow-hidden bg-gray-100">
-        <img
+        <motion.img
+          whileHover={{ scale: 1.15 }}
+          transition={{ duration: 0.4 }}
           src={getGoogleDriveImageUrl(product.images[0])}
           alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+          className="w-full h-full object-cover"
           loading="lazy"
           crossOrigin="anonymous"
           onError={(e) => {
@@ -95,14 +97,24 @@ const ProductCard = ({ product }) => {
           </div>
         )}
         {!isOutOfStock && product.discountPercent > 0 && (
-          <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+          <motion.div
+            initial={{ x: -100, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded shadow-lg"
+          >
             {product.discountPercent}% OFF
-          </div>
+          </motion.div>
         )}
         {!isOutOfStock && product.featured && (
-          <div className="absolute top-2 right-2 bg-yellow-400 text-gray-900 text-xs font-bold px-2 py-1 rounded">
+          <motion.div
+            initial={{ x: 100, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="absolute top-2 right-2 bg-yellow-400 text-gray-900 text-xs font-bold px-2 py-1 rounded shadow-lg"
+          >
             ★ Featured
-          </div>
+          </motion.div>
         )}
       </div>
 
@@ -139,25 +151,27 @@ const ProductCard = ({ product }) => {
         {/* Price */}
         <div className="flex items-center gap-2 mb-3">
           <span className="text-xl font-bold text-primary-600">
-            ₹{discountedPrice.toFixed(2)}
+            ₹{discountedPrice}
           </span>
           {product.discountPercent > 0 && (
-            <span className="text-sm text-gray-500 line-through">
-              ₹{parseFloat(product.price).toFixed(2)}
+            <span className="text-sm text-gray-400 line-through">
+              ₹{product.price}
             </span>
           )}
         </div>
 
         {/* Add to Cart Button */}
-        <button
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={handleAddToCart}
           disabled={isAdding || isOutOfStock}
-          className={`w-full py-2 rounded-lg font-medium transition-all ${
+          className={`w-full py-2 rounded-lg font-medium transition-all duration-300 ${
             isOutOfStock
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
               : isAdding
-              ? 'bg-green-500 text-white'
-              : 'bg-primary-600 hover:bg-primary-700 text-white'
+              ? 'bg-green-500 text-white shadow-lg'
+              : 'bg-primary-600 hover:bg-primary-700 text-white hover:shadow-lg'
           }`}
         >
           {isOutOfStock ? (
@@ -190,7 +204,7 @@ const ProductCard = ({ product }) => {
           ) : (
             'Add to Cart'
           )}
-        </button>
+        </motion.button>
       </div>
     </motion.div>
   );

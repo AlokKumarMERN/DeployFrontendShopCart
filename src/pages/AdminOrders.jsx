@@ -284,7 +284,42 @@ const AdminOrders = () => {
                     <div><span className="text-gray-600">Total:</span> <span className="font-medium">₹{selectedOrder.grandTotal?.toFixed(2)}</span></div>
                     <div><span className="text-gray-600">Customer:</span> <span className="font-medium">{selectedOrder.shippingAddress?.fullName}</span></div>
                     <div><span className="text-gray-600">Phone:</span> <span className="font-medium">{selectedOrder.shippingAddress?.phone}</span></div>
+                    <div className="col-span-2"><span className="text-gray-600">Email:</span> <span className="font-medium">{selectedOrder.user?.email || 'N/A'}</span></div>
                   </div>
+                  
+                  {/* Order Items List */}
+                  <div className="mt-4">
+                    <h4 className="font-semibold text-gray-900 mb-2">Order Items ({selectedOrder.items?.length || 0}):</h4>
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {selectedOrder.items?.map((item, idx) => (
+                        <div key={idx} className="flex items-center gap-3 p-2 bg-white rounded border border-gray-200">
+                          {item.image && (
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              className="w-12 h-12 object-cover rounded"
+                              crossOrigin="anonymous"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = '/images/products/placeholder.svg';
+                              }}
+                            />
+                          )}
+                          <div className="flex-1">
+                            <p className="font-medium text-sm text-gray-900">{item.name}</p>
+                            <p className="text-xs text-gray-600">
+                              Qty: <span className="font-semibold">{item.quantity}</span> × ₹{item.price?.toFixed(2)}
+                              {item.size && <span className="ml-2 text-primary-600">({item.size})</span>}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold text-gray-900">₹{item.subtotal?.toFixed(2)}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
                   {selectedOrder.cancellation && (
                     <div className="mt-3 p-3 bg-red-50 rounded border border-red-200">
                       <p className="text-sm font-semibold text-red-900 mb-1">❌ Cancelled Order</p>

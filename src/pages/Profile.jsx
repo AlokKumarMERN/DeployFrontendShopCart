@@ -213,14 +213,14 @@ const Profile = () => {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-lg shadow-md p-6 mb-6"
         >
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 mb-1">
                 Welcome, {user?.name}!
               </h1>
               <p className="text-gray-600">{user?.email}</p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               {user?.role === 'admin' && (
                 <button
                   onClick={() => navigate('/admin')}
@@ -344,12 +344,24 @@ const Profile = () => {
                     {/* Order Items */}
                     <div className="space-y-3 mb-4">
                       {order.items && order.items.map((item, idx) => (
-                        <div key={idx} className="flex gap-3">
+                        <div 
+                          key={idx} 
+                          className="flex gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
+                          onClick={() => {
+                            const productId = typeof item.product === 'object' ? item.product._id : item.product;
+                            if (productId) {
+                              window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                              document.documentElement.scrollTop = 0;
+                              document.body.scrollTop = 0;
+                              navigate(`/product/${productId}`);
+                            }
+                          }}
+                        >
                           {item.image && (
                             <img
                               src={getGoogleDriveImageUrl(item.image)}
                               alt={item.name || 'Product'}
-                              className="w-16 h-16 object-cover rounded"
+                              className="w-16 h-16 object-cover rounded hover:scale-105 transition-transform"
                               crossOrigin="anonymous"
                               onError={(e) => {
                                 e.target.onerror = null;
@@ -358,7 +370,7 @@ const Profile = () => {
                             />
                           )}
                           <div className="flex-1">
-                            <p className="font-medium text-gray-900">{item.name}</p>
+                            <p className="font-medium text-gray-900 hover:text-primary-600 transition-colors">{item.name}</p>
                             <p className="text-sm text-gray-600">
                               Qty: {item.quantity} × ₹{(item.price || 0).toFixed(2)}
                               {item.size && ` (${item.size})`}

@@ -14,12 +14,14 @@ const Header = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const searchRef = useRef(null);
+  const mobileSearchRef = useRef(null);
   const debounceTimer = useRef(null);
 
   // Close search results when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
+      if (searchRef.current && !searchRef.current.contains(event.target) &&
+          mobileSearchRef.current && !mobileSearchRef.current.contains(event.target)) {
         setShowSearchResults(false);
       }
     };
@@ -174,31 +176,35 @@ const Header = () => {
           <nav className="hidden lg:flex items-center gap-6">
             <Link
               to="/"
-              className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
+              className="text-gray-700 hover:text-primary-600 font-medium transition-all duration-300 hover:scale-110 relative group"
             >
               Home
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary-600 transition-all duration-300 group-hover:w-full"></span>
             </Link>
             <Link
               to="/shopping"
-              className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
+              className="text-gray-700 hover:text-primary-600 font-medium transition-all duration-300 hover:scale-110 relative group"
             >
               Shopping
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary-600 transition-all duration-300 group-hover:w-full"></span>
             </Link>
             <Link
               to="/contact"
-              className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
+              className="text-gray-700 hover:text-primary-600 font-medium transition-all duration-300 hover:scale-110 relative group"
             >
               Contact
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary-600 transition-all duration-300 group-hover:w-full"></span>
             </Link>
             <Link
               to="/profile"
-              className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
+              className="text-gray-700 hover:text-primary-600 font-medium transition-all duration-300 hover:scale-110 relative group"
             >
               Profile
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary-600 transition-all duration-300 group-hover:w-full"></span>
             </Link>
-            <Link to="/cart" className="relative">
+            <Link to="/cart" className="relative group">
               <svg
-                className="w-6 h-6 text-gray-700 hover:text-primary-600 transition-colors"
+                className="w-6 h-6 text-gray-700 hover:text-primary-600 transition-all duration-300 group-hover:scale-110"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -220,13 +226,13 @@ const Header = () => {
             {/* User Login Indicator - Show for both logged in and not logged in */}
             <div className="flex items-center gap-2 pl-4 border-l border-gray-300">
               {isAuthenticated && user ? (
-                <Link to="/profile" className="flex items-center hover:opacity-80 transition-opacity" title={user.name}>
-                  <div className="w-9 h-9 rounded-full bg-primary-600 flex items-center justify-center text-white font-semibold text-sm">
+                <Link to="/profile" className="flex items-center hover:opacity-80 transition-all duration-300 hover:scale-110" title={user.name}>
+                  <div className="w-9 h-9 rounded-full bg-primary-600 flex items-center justify-center text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all">
                     {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                   </div>
                 </Link>
               ) : (
-                <Link to="/login" className="flex items-center hover:opacity-80 transition-opacity" title="Login">
+                <Link to="/login" className="flex items-center hover:opacity-80 transition-all duration-300 hover:scale-110" title="Login">
                   <svg
                     className="w-8 h-8 text-gray-700"
                     fill="none"
@@ -279,7 +285,7 @@ const Header = () => {
         </div>
 
         {/* Mobile Search */}
-        <div className="md:hidden mt-3 relative" ref={searchRef}>
+        <div className="md:hidden mt-4 relative" ref={mobileSearchRef}>
           <input
             type="text"
             placeholder="Search products..."
@@ -300,6 +306,57 @@ const Header = () => {
               d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
             />
           </svg>
+
+          {/* Mobile Search Results Dropdown */}
+          <AnimatePresence>
+            {showSearchResults && searchResults.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute top-full mt-2 w-full bg-white rounded-lg shadow-xl border border-gray-200 max-h-96 overflow-y-auto z-50"
+              >
+                {searchResults.map((product) => (
+                  <button
+                    key={product._id}
+                    onClick={() => handleSearchResultClick(product._id)}
+                    className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors text-left"
+                  >
+                    <img
+                      src={getGoogleDriveImageUrl(product.images[0])}
+                      alt={product.name}
+                      className="w-12 h-12 object-cover rounded"
+                      crossOrigin="anonymous"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = '/images/products/placeholder.svg';
+                      }}
+                    />
+                    <div className="flex-1">
+                      <p className="font-medium text-sm text-gray-900">
+                        {product.name}
+                      </p>
+                      <p className="text-xs text-gray-500">{product.category}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-primary-600">
+                        ₹
+                        {Math.round(
+                          product.price -
+                            (product.price * product.discountPercent) / 100
+                        )}
+                      </p>
+                      {product.discountPercent > 0 && (
+                        <p className="text-xs text-gray-500 line-through">
+                          ₹{product.price}
+                        </p>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </header>

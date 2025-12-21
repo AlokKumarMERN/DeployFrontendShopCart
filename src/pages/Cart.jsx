@@ -46,6 +46,23 @@ const Cart = () => {
     });
   };
 
+  // Auto-close thank you modal after 2 seconds and redirect
+  useEffect(() => {
+    if (showThankYouModal) {
+      const timer = setTimeout(() => {
+        setShowThankYouModal(false);
+        setTimeout(() => {
+          window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+          document.documentElement.scrollTop = 0;
+          document.body.scrollTop = 0;
+          navigate('/shopping');
+        }, 300); // Wait for modal exit animation
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [showThankYouModal, navigate]);
+
   // Fetch real-time stock data for cart items
   useEffect(() => {
     const fetchProductsStock = async () => {
@@ -264,7 +281,9 @@ const Cart = () => {
 
       clearCart();
       setShowAddressModal(false);
+      console.log('Setting showThankYouModal to true');
       setShowThankYouModal(true);
+      console.log('showThankYouModal state should be true now');
     } catch (error) {
       console.error('Order placement error:', error);
       console.error('Error details:', error.response?.data);
@@ -756,74 +775,119 @@ const Cart = () => {
       </AnimatePresence>
 
       {/* Thank You Modal */}
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {showThankYouModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4"
+            style={{ zIndex: 9999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
           >
             <motion.div
-              initial={{ scale: 0.5, y: 50 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.5, y: 50 }}
-              className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center"
+              initial={{ scale: 0.3, y: 100, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.8, y: -50, opacity: 0 }}
+              transition={{ 
+                type: 'spring', 
+                damping: 20, 
+                stiffness: 200,
+                duration: 0.5 
+              }}
+              className="bg-white rounded-2xl shadow-2xl p-10 max-w-lg w-full text-center relative overflow-hidden"
             >
+              {/* Confetti animation background */}
               <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.2, type: 'spring' }}
-                className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4"
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: 'radial-gradient(circle at center, rgba(34,197,94,0.15) 0%, rgba(34,197,94,0.05) 50%, rgba(255,255,255,0) 100%)'
+                }}
+              />
+
+              {/* Success checkmark with bounce */}
+              <motion.div
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ 
+                  delay: 0.1, 
+                  type: 'spring', 
+                  stiffness: 150,
+                  damping: 12
+                }}
+                className="w-28 h-28 bg-gradient-to-br from-green-400 via-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl relative z-10"
               >
-                <svg
-                  className="w-12 h-12 text-white"
+                <motion.svg
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  animate={{ pathLength: 1, opacity: 1 }}
+                  transition={{ delay: 0.4, duration: 0.6, ease: "easeInOut" }}
+                  className="w-16 h-16 text-white"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                  strokeWidth={3}
                 >
-                  <path
+                  <motion.path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={3}
                     d="M5 13l4 4L19 7"
                   />
-                </svg>
+                </motion.svg>
+                
+                {/* Animated ring */}
+                <motion.div
+                  initial={{ scale: 1, opacity: 0.8 }}
+                  animate={{ scale: [1, 1.5, 2], opacity: [0.8, 0.4, 0] }}
+                  transition={{ duration: 1.2, repeat: Infinity, ease: "easeOut" }}
+                  className="absolute inset-0 border-4 border-green-400 rounded-full"
+                />
               </motion.div>
 
-              <h2 className="text-3xl font-bold text-gray-900 mb-3">
+              <motion.h2
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.5, duration: 0.5 }}
+                className="text-4xl font-bold text-gray-900 mb-4 relative z-10"
+              >
+                🎉 Thank You! 🎉
+              </motion.h2>
+              
+              <motion.p
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.6, duration: 0.5 }}
+                className="text-2xl font-semibold text-green-600 mb-3 relative z-10"
+              >
                 Order Placed Successfully!
-              </h2>
-              <p className="text-gray-600 mb-6">
-                Thank you for your order. You will receive your items soon via Cash
-                on Delivery.
-              </p>
+              </motion.p>
+              
+              <motion.p
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.7, duration: 0.5 }}
+                className="text-gray-600 mb-6 text-lg relative z-10"
+              >
+                Your order has been confirmed. You will receive your items soon via Cash on Delivery.
+              </motion.p>
 
-              <div className="flex flex-col gap-3">
-                <button
-                  onClick={() => {
-                    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-                    document.documentElement.scrollTop = 0;
-                    document.body.scrollTop = 0;
-                    navigate('/profile');
-                  }}
-                  className="btn-primary"
+              {/* Auto-redirect message with animated dots */}
+              <motion.p
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.8, duration: 0.4 }}
+                className="text-sm text-gray-500 flex items-center justify-center gap-2 relative z-10"
+              >
+                <span>Redirecting to shop</span>
+                <motion.span
+                  animate={{ opacity: [0, 1, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
                 >
-                  View My Orders
-                </button>
-                <button
-                  onClick={() => {
-                    setShowThankYouModal(false);
-                    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-                    document.documentElement.scrollTop = 0;
-                    document.body.scrollTop = 0;
-                    navigate('/shopping');
-                  }}
-                  className="btn-secondary"
-                >
-                  Continue Shopping
-                </button>
-              </div>
+                  ...
+                </motion.span>
+              </motion.p>
             </motion.div>
           </motion.div>
         )}

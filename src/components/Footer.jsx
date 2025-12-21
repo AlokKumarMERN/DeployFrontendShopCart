@@ -241,13 +241,13 @@ const Footer = () => {
                 </svg>
                 {isAuthenticated && user ? (
                   <a
-                    href={`https://mail.google.com/mail/?view=cm&fs=1&to=connect2alokgupta@gmail.com&su=${encodeURIComponent('Inquiry from Alok General Store')}&body=${encodeURIComponent(`Hi Alok,\n\nI am ${user.name} and I would like to inquire about...\n\nFrom: ${user.email}`)}`}
+                    href={`https://mail.google.com/mail/?view=cm&fs=1&to=alokshringarandgeneralstore@gmail.com&su=${encodeURIComponent('Inquiry from Alok General Store')}&body=${encodeURIComponent(`Hi Alok,\n\nI am ${user.name} and I would like to inquire about...\n\nFrom: ${user.email}`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:text-white transition-colors"
                     title="Send us an email"
                   >
-                    connect2alokgupta@gmail.com
+                    alokshringarandgeneralstore@gmail.com
                   </a>
                 ) : (
                   <button
@@ -256,7 +256,7 @@ const Footer = () => {
                     className="hover:text-white transition-colors cursor-pointer text-left"
                     title="Login to send email"
                   >
-                    connect2alokgupta@gmail.com
+                    alokshringarandgeneralstore@gmail.com
                   </button>
                 )}
               </li>

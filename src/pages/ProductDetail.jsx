@@ -103,6 +103,9 @@ const ProductDetail = () => {
     // Check if user is logged in first
     if (!isAuthenticated) {
       addToast('Please login to add items to cart', 'error');
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
       navigate('/login');
       return;
     }
@@ -121,6 +124,9 @@ const ProductDetail = () => {
     // Check if user is logged in first
     if (!isAuthenticated) {
       addToast('Please login to add items to cart', 'error');
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
       navigate('/login');
       return;
     }
@@ -131,6 +137,10 @@ const ProductDetail = () => {
     }
     addToCart(product, quantity, selectedSize);
     addToast(`${quantity} ${product.name} added to cart!`, 'success');
+    // Scroll to top before navigating to cart
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
     navigate('/cart');
   };
 

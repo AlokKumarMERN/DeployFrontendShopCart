@@ -30,6 +30,9 @@ const ProductCard = ({ product }) => {
     // Check if user is logged in first
     if (!isAuthenticated) {
       addToast('Please login to add items to cart', 'error');
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
       navigate('/login');
       return;
     }

@@ -1,6 +1,7 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import BottomNav from './components/BottomNav';
 import ScrollToTop from './components/ScrollToTop';
 import Home from './pages/Home';
 import Shopping from './pages/Shopping';
@@ -19,11 +20,16 @@ import AdminOrders from './pages/AdminOrders';
 import GoogleCallback from './pages/auth/GoogleCallback';
 
 function App() {
+  const location = useLocation();
+  
+  // Hide footer on mobile for Home and Shopping pages
+  const hideFooterOnMobile = location.pathname === '/' || location.pathname === '/shopping';
+
   return (
     <div className="flex flex-col min-h-screen">
       <ScrollToTop />
       <Header />
-      <main className="flex-1">
+      <main className="flex-1 lg:mb-0 mb-16">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/shopping" element={<Shopping />} />
@@ -43,7 +49,10 @@ function App() {
           <Route path="/admin/orders" element={<AdminOrders />} />
         </Routes>
       </main>
-      <Footer />
+      <div className={hideFooterOnMobile ? 'hidden lg:block' : ''}>
+        <Footer />
+      </div>
+      <BottomNav />
     </div>
   );
 }

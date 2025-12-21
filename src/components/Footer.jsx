@@ -5,6 +5,12 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
   const { user, isAuthenticated } = useAuth();
 
+  const handleLinkClick = () => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  };
+
   return (
     <footer className="bg-gray-900 text-gray-300 mt-auto">
       <div className="container-custom py-12">
@@ -81,6 +87,7 @@ const Footer = () => {
                 <Link
                   to="/"
                   className="text-sm hover:text-white transition-colors"
+                  onClick={handleLinkClick}
                 >
                   Home
                 </Link>
@@ -89,6 +96,7 @@ const Footer = () => {
                 <Link
                   to="/shopping"
                   className="text-sm hover:text-white transition-colors"
+                  onClick={handleLinkClick}
                 >
                   Shop Now
                 </Link>
@@ -97,6 +105,7 @@ const Footer = () => {
                 <Link
                   to="/contact"
                   className="text-sm hover:text-white transition-colors"
+                  onClick={handleLinkClick}
                 >
                   Contact Us
                 </Link>
@@ -105,6 +114,7 @@ const Footer = () => {
                 <Link
                   to="/profile"
                   className="text-sm hover:text-white transition-colors"
+                  onClick={handleLinkClick}
                 >
                   My Account
                 </Link>
@@ -120,6 +130,7 @@ const Footer = () => {
                 <Link
                   to="/shopping?category=Perfumes"
                   className="text-sm hover:text-white transition-colors"
+                  onClick={handleLinkClick}
                 >
                   Perfumes
                 </Link>
@@ -128,6 +139,7 @@ const Footer = () => {
                 <Link
                   to="/shopping?category=Cosmetics"
                   className="text-sm hover:text-white transition-colors"
+                  onClick={handleLinkClick}
                 >
                   Cosmetics
                 </Link>
@@ -136,6 +148,7 @@ const Footer = () => {
                 <Link
                   to="/shopping?category=Watches"
                   className="text-sm hover:text-white transition-colors"
+                  onClick={handleLinkClick}
                 >
                   Watches
                 </Link>
@@ -144,6 +157,7 @@ const Footer = () => {
                 <Link
                   to="/shopping?category=Toys"
                   className="text-sm hover:text-white transition-colors"
+                  onClick={handleLinkClick}
                 >
                   Toys
                 </Link>
@@ -152,6 +166,7 @@ const Footer = () => {
                 <Link
                   to="/shopping?category=Gifts"
                   className="text-sm hover:text-white transition-colors"
+                  onClick={handleLinkClick}
                 >
                   Gifts
                 </Link>
@@ -187,6 +202,7 @@ const Footer = () => {
                   to="/contact#location"
                   className="hover:text-white transition-colors cursor-pointer"
                   title="View our location on map"
+                  onClick={handleLinkClick}
                 >
                   Main Road, Barauli, Gopalganj, Pin code 841405
                 </Link>

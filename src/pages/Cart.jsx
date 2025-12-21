@@ -302,7 +302,12 @@ const Cart = () => {
               Add some products to your cart to see them here!
             </p>
             <button
-              onClick={() => navigate('/shopping')}
+              onClick={() => {
+                window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                document.documentElement.scrollTop = 0;
+                document.body.scrollTop = 0;
+                navigate('/shopping');
+              }}
               className="btn-primary"
             >
               Continue Shopping
@@ -796,7 +801,12 @@ const Cart = () => {
 
               <div className="flex flex-col gap-3">
                 <button
-                  onClick={() => navigate('/profile')}
+                  onClick={() => {
+                    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                    document.documentElement.scrollTop = 0;
+                    document.body.scrollTop = 0;
+                    navigate('/profile');
+                  }}
                   className="btn-primary"
                 >
                   View My Orders
@@ -804,6 +814,9 @@ const Cart = () => {
                 <button
                   onClick={() => {
                     setShowThankYouModal(false);
+                    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                    document.documentElement.scrollTop = 0;
+                    document.body.scrollTop = 0;
                     navigate('/shopping');
                   }}
                   className="btn-secondary"

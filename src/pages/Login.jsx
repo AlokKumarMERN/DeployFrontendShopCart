@@ -54,6 +54,11 @@ const Login = () => {
     if (result.success) {
       const redirect = searchParams.get('redirect');
       
+      // Scroll to top before navigation
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      
       // Redirect based on where they came from
       if (redirect === 'contact-email') {
         navigate('/');

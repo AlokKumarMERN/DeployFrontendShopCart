@@ -136,17 +136,15 @@ const Contact = () => {
                     />
                   </svg>
                 </div>
-                <div className="min-w-0 flex-1 overflow-hidden">
+                <div className="min-w-0 flex-1">
                   <h3 className="font-semibold text-gray-900 mb-1">Email</h3>
-                  <p className="text-gray-600">
-                    <a 
-                      href="mailto:alokshringarandgeneralstore@gmail.com" 
-                      className="hover:text-primary-600 transition-colors block truncate text-sm"
-                      title="alokshringarandgeneralstore@gmail.com"
-                    >
-                      alokshringarandgeneralstore@gmail.com
-                    </a>
-                  </p>
+                  <a 
+                    href="mailto:alokshringarandgeneralstore@gmail.com" 
+                    className="text-gray-600 hover:text-primary-600 transition-colors truncate text-sm block cursor-pointer"
+                    title="alokshringarandgeneralstore@gmail.com"
+                  >
+                    alokshringarandgeneralstore<br />@gmail.com
+                  </a>
                 </div>
               </div>
 
@@ -302,7 +300,7 @@ const Contact = () => {
                     setFormData({ ...formData, name: e.target.value })
                   }
                   className="input-field"
-                  placeholder="John Doe"
+                  placeholder="Alok Gupta"
                   required
                 />
               </div>
@@ -318,7 +316,7 @@ const Contact = () => {
                     setFormData({ ...formData, email: e.target.value })
                   }
                   className="input-field"
-                  placeholder="your.email@example.com"
+                  placeholder="abcd@gmail.com"
                   required
                 />
               </div>

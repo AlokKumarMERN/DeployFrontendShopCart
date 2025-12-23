@@ -364,11 +364,14 @@ const Cart = () => {
                   }`}
                 >
                   {/* Product Image */}
-                  <div className="relative">
+                  <div 
+                    className="relative cursor-pointer"
+                    onClick={() => navigate(`/product/${item._id}`)}
+                  >
                     <img
                       src={getGoogleDriveImageUrl(item.image)}
                       alt={item.name}
-                      className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
+                      className="w-24 h-24 object-cover rounded-lg flex-shrink-0 hover:opacity-80 transition-opacity"
                       crossOrigin="anonymous"
                       onError={(e) => {
                         e.target.onerror = null;
@@ -386,7 +389,10 @@ const Cart = () => {
 
                   {/* Product Details */}
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 mb-1">
+                    <h3 
+                      className="font-semibold text-gray-900 mb-1 cursor-pointer hover:text-primary-600 transition-colors"
+                      onClick={() => navigate(`/product/${item._id}`)}
+                    >
                       {item.name}
                     </h3>
                     <p className="text-sm text-gray-600 mb-2">

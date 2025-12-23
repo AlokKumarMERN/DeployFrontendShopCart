@@ -163,7 +163,7 @@ const AdminProducts = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <img
-                            src={getGoogleDriveImageUrl(product.imageUrl)}
+                            src={getGoogleDriveImageUrl(product.images?.[0] || '')}
                             alt={product.name}
                             className="h-10 w-10 rounded object-cover"
                           />

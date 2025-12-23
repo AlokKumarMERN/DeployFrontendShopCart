@@ -13,9 +13,32 @@ const ProductCard = ({ product }) => {
   const { addToast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
 
-  const discountedPrice = parseFloat((
-    product.price - (product.price * product.discountPercent) / 100
-  ).toFixed(2));
+  // Calculate price display for products with and without variants
+  const getPriceInfo = () => {
+    if (product.sizes && product.sizes.length > 0) {
+      // Product has variants - show only lowest price
+      const prices = product.sizes.map(size => size.price);
+      const minPrice = Math.min(...prices);
+      
+      // Apply discount and ceil the value
+      const discountedMin = Math.ceil(minPrice - (minPrice * product.discountPercent) / 100);
+      
+      return {
+        price: discountedMin,
+        originalPrice: Math.ceil(minPrice),
+      };
+    } else {
+      // Product has single price
+      const discountedPrice = Math.ceil(product.price - (product.price * product.discountPercent) / 100);
+      
+      return {
+        price: discountedPrice,
+        originalPrice: Math.ceil(product.price),
+      };
+    }
+  };
+
+  const priceInfo = getPriceInfo();
 
   // Calculate total stock
   const totalStock = product.sizes && product.sizes.length > 0
@@ -151,11 +174,11 @@ const ProductCard = ({ product }) => {
         {/* Price */}
         <div className="flex items-center gap-2 mb-3">
           <span className="text-xl font-bold text-primary-600">
-            ₹{discountedPrice}
+            ₹{priceInfo.price}
           </span>
           {product.discountPercent > 0 && (
             <span className="text-sm text-gray-400 line-through">
-              ₹{product.price}
+              ₹{priceInfo.originalPrice}
             </span>
           )}
         </div>

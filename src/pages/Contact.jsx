@@ -112,8 +112,8 @@ const Contact = () => {
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">Phone</h3>
                   <p className="text-gray-600">
-                    <a href="tel:+918051697438" className="hover:text-primary-600 transition-colors">
-                      +91 8051697438
+                    <a href="tel:+917903459520" className="hover:text-primary-600 transition-colors">
+                      +91 7903459520
                     </a>
                   </p>
                 </div>
@@ -196,7 +196,7 @@ const Contact = () => {
                   </svg>
                 </a>
                 <a
-                  href="https://instagram.com/alokkumar6189?igshid=NGExMmI2YTkyZg=="
+                  href="https://www.instagram.com/alokgeneralstorebarauli/https://instagram.com/alokkumar6189?igshid=NGExMmI2YTkyZg=="
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 bg-primary-100 hover:bg-primary-200 rounded-lg flex items-center justify-center transition-colors"
@@ -224,7 +224,7 @@ const Contact = () => {
                   </svg>
                 </a>
                 <a
-                  href="https://wa.me/message/RCBLLWUNJ4XPD1"
+                  href="https://wa.me/917903459520"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 bg-primary-100 hover:bg-primary-200 rounded-lg flex items-center justify-center transition-colors"

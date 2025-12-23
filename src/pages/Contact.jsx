@@ -136,10 +136,14 @@ const Contact = () => {
                     />
                   </svg>
                 </div>
-                <div>
+                <div className="min-w-0 flex-1">
                   <h3 className="font-semibold text-gray-900 mb-1">Email</h3>
                   <p className="text-gray-600">
-                    <a href="mailto:alokshringarandgeneralstore@gmail.com" className="hover:text-primary-600 transition-colors break-words">
+                    <a 
+                      href="mailto:alokshringarandgeneralstore@gmail.com" 
+                      className="hover:text-primary-600 transition-colors block truncate"
+                      title="alokshringarandgeneralstore@gmail.com"
+                    >
                       alokshringarandgeneralstore@gmail.com
                     </a>
                   </p>

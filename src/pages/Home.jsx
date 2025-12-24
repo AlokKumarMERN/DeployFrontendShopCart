@@ -46,14 +46,11 @@ const Home = () => {
   const fetchFeaturedProducts = async () => {
     try {
       setLoading(true);
-      console.log('Fetching featured products...');
-      const response = await productsAPI.getAll({ featured: true, limit: 18 });
-      console.log('Featured products response:', response.data);
-      console.log('Number of products:', response.data.data?.length);
+      // Load only 12 featured products for faster initial load
+      const response = await productsAPI.getAll({ featured: true, limit: 12 });
       setFeaturedProducts(response.data.data);
     } catch (error) {
       console.error('Error fetching featured products:', error);
-      console.error('Error response:', error.response?.data);
     } finally {
       setLoading(false);
     }

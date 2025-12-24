@@ -29,20 +29,21 @@ const AdminDashboard = () => {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const [productsRes, ordersRes] = await Promise.all([
-        productsAPI.getAll(),
-        ordersAPI.getAll(),
+      // Use optimized stats endpoints - much faster!
+      const [productStatsRes, orderStatsRes] = await Promise.all([
+        productsAPI.getStats(),
+        ordersAPI.getStats(),
       ]);
 
-      const products = productsRes.data.data;
-      const orders = ordersRes.data.data;
+      const productStats = productStatsRes.data.data;
+      const orderStats = orderStatsRes.data.data;
 
       setStats({
-        totalProducts: products.length,
-        featuredProducts: products.filter((p) => p.featured).length,
-        totalOrders: orders.length,
-        pendingOrders: orders.filter((o) => o.orderStatus === 'Pending').length,
-        deliveredOrders: orders.filter((o) => o.orderStatus === 'Delivered').length,
+        totalProducts: productStats.totalProducts,
+        featuredProducts: productStats.featuredProducts,
+        totalOrders: orderStats.totalOrders,
+        pendingOrders: orderStats.pendingOrders,
+        deliveredOrders: orderStats.deliveredOrders,
       });
     } catch (error) {
       console.error('Error fetching stats:', error);

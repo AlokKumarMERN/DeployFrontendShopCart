@@ -61,6 +61,7 @@ export const productsAPI = {
   create: (data) => api.post('/products', data),
   update: (id, data) => api.put(`/products/${id}`, data),
   delete: (id) => api.delete(`/products/${id}`),
+  getStats: () => api.get('/products/admin/stats'),
 };
 
 // Orders API
@@ -70,6 +71,7 @@ export const ordersAPI = {
   getById: (id) => api.get(`/orders/${id}`),
   updateStatus: (id, data) => api.put(`/orders/${id}/status`, data),
   cancel: (id, reason) => api.put(`/orders/${id}/cancel`, { reason }),
+  getStats: () => api.get('/orders/admin/stats'),
 };
 
 // Contact API
@@ -82,6 +84,13 @@ export const cartAPI = {
   get: () => api.get('/cart'),
   update: (cart) => api.put('/cart', { cart }),
   clear: () => api.delete('/cart'),
+};
+
+// Categories API
+export const categoriesAPI = {
+  getAll: () => api.get('/categories'),
+  create: (data) => api.post('/categories', data),
+  delete: (id) => api.delete(`/categories/${id}`),
 };
 
 export default api;

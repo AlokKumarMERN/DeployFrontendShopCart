@@ -105,8 +105,41 @@ const Profile = () => {
   };
 
   const openReviewModal = (item) => {
-    const productId = typeof item.product === 'object' ? item.product._id : item.product;
-    setReviewProduct({ id: productId, name: item.name, image: item.image });
+    console.log('Opening review modal for item:', item);
+    
+    let productId = null;
+    let productName = item.name || 'Product';
+    let productImage = item.image || '';
+    
+    // Try multiple ways to get the product ID
+    if (item.product) {
+      if (typeof item.product === 'object' && item.product !== null) {
+        productId = item.product._id || item.product.id;
+        productName = item.product.name || productName;
+        productImage = item.product.images?.[0] || productImage;
+      } else if (typeof item.product === 'string') {
+        productId = item.product;
+      }
+    }
+    
+    // Fallback: use item's _id as product reference
+    if (!productId && item._id) {
+      productId = item._id;
+    }
+    
+    console.log('Product ID extracted:', productId);
+    
+    if (!productId) {
+      console.error('Failed to extract product ID from item:', item);
+      alert('Unable to load product information for review.');
+      return;
+    }
+    
+    setReviewProduct({ 
+      id: productId, 
+      name: productName, 
+      image: productImage 
+    });
     setReviewData({ rating: 5, comment: '' });
     setShowReviewModal(true);
   };

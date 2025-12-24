@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { productsAPI } from '../api/api';
+import { productsAPI, categoriesAPI } from '../api/api';
 import ProductCard from '../components/ProductCard';
 
 const Shopping = () => {
@@ -10,53 +10,69 @@ const Shopping = () => {
   const [loading, setLoading] = useState(true);
   const [categoryProducts, setCategoryProducts] = useState({});
   const [expandedCategories, setExpandedCategories] = useState({});
+  const [categories, setCategories] = useState([]);
 
-  const categories = [
-    'Perfumes',
-    'Gifts',
-    'Cosmetics',
-    'Toys',
-    'Bangles',
-    'Belts',
-    'Watches',
-    'Caps',
-    'Birthday Items',
-  ];
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     const category = searchParams.get('category');
     if (category) {
       fetchProductsByCategory(category);
-    } else {
+    } else if (categories.length > 0) {
       fetchAllProducts();
     }
-  }, [searchParams]);
+  }, [searchParams, categories]);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await categoriesAPI.getAll();
+      const categoryNames = response.data.data.map(cat => cat.name);
+      setCategories(categoryNames);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      // Fallback to default categories if fetch fails
+      setCategories([
+        'Perfumes',
+        'Gifts',
+        'Cosmetics',
+        'Toys',
+        'Bangles',
+        'Belts',
+        'Watches',
+        'Caps',
+        'Birthday Items',
+      ]);
+    }
+  };
 
   const fetchAllProducts = async () => {
     try {
       setLoading(true);
-      const categoryData = {};
-
-      console.log('Fetching products for all categories...');
       
-      // Fetch initial products for each category (limit 12 for better display)
-      await Promise.all(
-        categories.map(async (category) => {
-          const response = await productsAPI.getByCategory(category, 12);
-          console.log(`${category}:`, response.data.data?.length, 'products');
+      // Fetch all products in ONE query - much faster!
+      const response = await productsAPI.getAll({ limit: 100 });
+      const allProducts = response.data.data;
+      
+      // Group products by category on the client side
+      const categoryData = {};
+      
+      categories.forEach(category => {
+        const categoryProducts = allProducts.filter(p => p.category === category);
+        if (categoryProducts.length > 0) {
           categoryData[category] = {
-            products: response.data.data,
-            total: response.data.total,
-            hasMore: response.data.hasMore,
+            products: categoryProducts.slice(0, 12), // Show first 12
+            total: categoryProducts.length,
+            hasMore: categoryProducts.length > 12,
+            allProducts: categoryProducts, // Store all for "load more"
           };
-        })
-      );
+        }
+      });
 
-      console.log('All category products:', categoryData);
       setCategoryProducts(categoryData);
     } catch (error) {
       console.error('Error fetching products:', error);
-      console.error('Error details:', error.response?.data);
     } finally {
       setLoading(false);
     }
@@ -76,15 +92,30 @@ const Shopping = () => {
 
   const loadMoreProducts = async (category) => {
     try {
-      const response = await productsAPI.getByCategory(category, 100);
-      setCategoryProducts((prev) => ({
-        ...prev,
-        [category]: {
-          products: response.data.data,
-          total: response.data.total,
-          hasMore: false,
-        },
-      }));
+      const categoryData = categoryProducts[category];
+      
+      // Use cached data if available, otherwise fetch
+      if (categoryData.allProducts) {
+        setCategoryProducts((prev) => ({
+          ...prev,
+          [category]: {
+            ...prev[category],
+            products: prev[category].allProducts,
+            hasMore: false,
+          },
+        }));
+      } else {
+        const response = await productsAPI.getByCategory(category, 100);
+        setCategoryProducts((prev) => ({
+          ...prev,
+          [category]: {
+            products: response.data.data,
+            total: response.data.total,
+            hasMore: false,
+          },
+        }));
+      }
+      
       setExpandedCategories((prev) => ({ ...prev, [category]: true }));
     } catch (error) {
       console.error('Error loading more products:', error);

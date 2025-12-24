@@ -24,7 +24,8 @@ const AdminProducts = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await productsAPI.getAll();
+      // Load products with reasonable limit for better performance
+      const response = await productsAPI.getAll({ limit: 100 });
       setProducts(response.data.data);
     } catch (error) {
       console.error('Error fetching products:', error);

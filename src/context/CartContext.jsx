@@ -1,7 +1,10 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { cartAPI } from '../api/api';
 
 const CartContext = createContext();
+
+// Debounce delay for backend sync (5 seconds)
+const SYNC_DELAY = 30000;
 
 export const useCart = () => {
   const context = useContext(CartContext);
@@ -14,6 +17,12 @@ export const useCart = () => {
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [pendingSync, setPendingSync] = useState(false);
+  
+  // Refs to track debounce timer and pending cart data
+  const syncTimeoutRef = useRef(null);
+  const pendingCartRef = useRef(null);
 
   // Load cart from backend when user is logged in
   const loadCartFromBackend = async () => {
@@ -55,12 +64,13 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  // Save cart to backend
+  // Save cart to backend (actual API call)
   const saveCartToBackend = async (items) => {
     const token = localStorage.getItem('token');
     if (!token) return;
 
     try {
+      setIsSyncing(true);
       // Map cart items to match backend schema
       const cartForBackend = items.map(item => ({
         productId: item._id,
@@ -74,10 +84,51 @@ export const CartProvider = ({ children }) => {
       }));
       
       await cartAPI.update(cartForBackend);
+      setPendingSync(false);
+      pendingCartRef.current = null;
     } catch (error) {
       console.error('Failed to save cart to backend:', error);
+    } finally {
+      setIsSyncing(false);
     }
   };
+
+  // Debounced sync function - waits before syncing to backend
+  const debouncedSyncToBackend = useCallback((items) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    // Store pending cart data
+    pendingCartRef.current = items;
+    setPendingSync(true);
+
+    // Clear existing timeout
+    if (syncTimeoutRef.current) {
+      clearTimeout(syncTimeoutRef.current);
+    }
+
+    console.log(`[Cart] Changes detected, will sync to database in ${SYNC_DELAY / 1000} seconds...`);
+
+    // Set new timeout
+    syncTimeoutRef.current = setTimeout(() => {
+      console.log('[Cart] Syncing to database now...');
+      if (pendingCartRef.current) {
+        saveCartToBackend(pendingCartRef.current);
+      }
+    }, SYNC_DELAY);
+  }, []);
+
+  // Force immediate sync (useful before page unload or logout)
+  const forceSync = useCallback(async () => {
+    if (syncTimeoutRef.current) {
+      clearTimeout(syncTimeoutRef.current);
+      syncTimeoutRef.current = null;
+    }
+    
+    if (pendingCartRef.current) {
+      await saveCartToBackend(pendingCartRef.current);
+    }
+  }, []);
 
   // Load cart on mount
   useEffect(() => {
@@ -94,20 +145,66 @@ export const CartProvider = ({ children }) => {
     }
   }, []);
 
-  // Save cart to localStorage and backend whenever it changes
+  // Save cart to localStorage immediately, debounce backend sync
   useEffect(() => {
+    // Always save to localStorage immediately for instant persistence
     localStorage.setItem('cart', JSON.stringify(cartItems));
     
     const token = localStorage.getItem('token');
     if (token && cartItems.length >= 0) {
-      // Debounce the backend save
-      const timeoutId = setTimeout(() => {
-        saveCartToBackend(cartItems);
-      }, 500);
-      
-      return () => clearTimeout(timeoutId);
+      // Use debounced sync for backend (5 second delay)
+      debouncedSyncToBackend(cartItems);
     }
-  }, [cartItems]);
+  }, [cartItems, debouncedSyncToBackend]);
+
+  // Sync to backend before page unload to prevent data loss
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (pendingCartRef.current) {
+        // Use sendBeacon for reliable sync on page close
+        const token = localStorage.getItem('token');
+        if (token && pendingCartRef.current) {
+          const cartForBackend = pendingCartRef.current.map(item => ({
+            productId: item._id,
+            name: item.name,
+            image: item.image,
+            price: item.price,
+            originalPrice: item.originalPrice,
+            quantity: item.quantity,
+            selectedSize: item.selectedSize,
+            category: item.category,
+          }));
+          
+          // Use sendBeacon for reliable delivery during page unload
+          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+          navigator.sendBeacon(
+            `${apiUrl}/cart/sync`,
+            new Blob([JSON.stringify({ items: cartForBackend, token })], { type: 'application/json' })
+          );
+        }
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      // NOTE: Disabled auto-sync on tab switch to preserve debounce behavior
+      // Uncomment below if you want immediate sync when user leaves tab
+      // if (document.visibilityState === 'hidden' && pendingCartRef.current) {
+      //   forceSync();
+      // }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      // Cleanup timeout on unmount
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+      }
+    };
+  }, [forceSync]);
 
   const addToCart = (product, quantity = 1, selectedSize = null) => {
     setCartItems((prevItems) => {
@@ -210,6 +307,9 @@ export const CartProvider = ({ children }) => {
     getCartCount,
     loadCartFromBackend,
     isLoading,
+    isSyncing,      // true when actively syncing to backend
+    pendingSync,    // true when there are unsaved changes waiting
+    forceSync,      // function to force immediate sync
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

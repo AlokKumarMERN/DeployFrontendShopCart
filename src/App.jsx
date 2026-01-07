@@ -17,6 +17,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminProducts from './pages/AdminProducts';
 import AdminProductForm from './pages/AdminProductForm';
 import AdminOrders from './pages/AdminOrders';
+import AdminFilters from './pages/AdminFilters';
 import GoogleCallback from './pages/auth/GoogleCallback';
 
 function App() {
@@ -47,6 +48,7 @@ function App() {
           <Route path="/admin/products/new" element={<AdminProductForm />} />
           <Route path="/admin/products/edit/:id" element={<AdminProductForm />} />
           <Route path="/admin/orders" element={<AdminOrders />} />
+          <Route path="/admin/filters" element={<AdminFilters />} />
         </Routes>
       </main>
       <div className={hideFooterOnMobile ? 'hidden lg:block' : ''}>

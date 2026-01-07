@@ -3,7 +3,7 @@ import { cartAPI } from '../api/api';
 
 const CartContext = createContext();
 
-// Debounce delay for backend sync (5 seconds)
+// Debounce delay for backend sync (30 seconds)
 const SYNC_DELAY = 30000;
 
 export const useCart = () => {
@@ -107,11 +107,8 @@ export const CartProvider = ({ children }) => {
       clearTimeout(syncTimeoutRef.current);
     }
 
-    console.log(`[Cart] Changes detected, will sync to database in ${SYNC_DELAY / 1000} seconds...`);
-
     // Set new timeout
     syncTimeoutRef.current = setTimeout(() => {
-      console.log('[Cart] Syncing to database now...');
       if (pendingCartRef.current) {
         saveCartToBackend(pendingCartRef.current);
       }
@@ -152,7 +149,6 @@ export const CartProvider = ({ children }) => {
     
     const token = localStorage.getItem('token');
     if (token && cartItems.length >= 0) {
-      // Use debounced sync for backend (5 second delay)
       debouncedSyncToBackend(cartItems);
     }
   }, [cartItems, debouncedSyncToBackend]);
@@ -185,20 +181,10 @@ export const CartProvider = ({ children }) => {
       }
     };
 
-    const handleVisibilityChange = () => {
-      // NOTE: Disabled auto-sync on tab switch to preserve debounce behavior
-      // Uncomment below if you want immediate sync when user leaves tab
-      // if (document.visibilityState === 'hidden' && pendingCartRef.current) {
-      //   forceSync();
-      // }
-    };
-
     window.addEventListener('beforeunload', handleBeforeUnload);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
       // Cleanup timeout on unmount
       if (syncTimeoutRef.current) {
         clearTimeout(syncTimeoutRef.current);

@@ -23,10 +23,29 @@ const ProductDetail = () => {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewData, setReviewData] = useState({ rating: 5, comment: '' });
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [canReview, setCanReview] = useState(false);
 
   useEffect(() => {
     fetchProduct();
   }, [id]);
+
+  // Check if user can review this product
+  useEffect(() => {
+    const checkCanReview = async () => {
+      if (isAuthenticated && id) {
+        try {
+          const response = await productsAPI.canReview(id);
+          setCanReview(response.data.canReview);
+        } catch (error) {
+          console.error('Error checking review eligibility:', error);
+          setCanReview(false);
+        }
+      } else {
+        setCanReview(false);
+      }
+    };
+    checkCanReview();
+  }, [isAuthenticated, id]);
 
   // Reset quantity when selected size changes or when stock becomes unavailable
   useEffect(() => {
@@ -439,7 +458,7 @@ const ProductDetail = () => {
         >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold">Customer Reviews</h2>
-            {isAuthenticated && (
+            {isAuthenticated && canReview && (
               <button
                 onClick={() => setShowReviewForm(!showReviewForm)}
                 className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
@@ -453,7 +472,7 @@ const ProductDetail = () => {
           </div>
 
           {/* Review Form */}
-          {showReviewForm && (
+          {showReviewForm && canReview && (
             <motion.form
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}

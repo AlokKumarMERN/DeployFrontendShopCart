@@ -57,6 +57,7 @@ export const productsAPI = {
   search: (query) => api.get('/products/search', { params: { q: query } }),
   getByCategory: (category, limit) =>
     api.get(`/products/category/${category}`, { params: { limit } }),
+  canReview: (id) => api.get(`/products/${id}/can-review`),
   addReview: (id, data) => api.post(`/products/${id}/reviews`, data),
   create: (data) => api.post('/products', data),
   update: (id, data) => api.put(`/products/${id}`, data),
@@ -91,6 +92,17 @@ export const categoriesAPI = {
   getAll: () => api.get('/categories'),
   create: (data) => api.post('/categories', data),
   delete: (id) => api.delete(`/categories/${id}`),
+};
+
+// Filters API (for custom admin-defined filters)
+export const filtersAPI = {
+  getAll: () => api.get('/filters'),
+  getAllAdmin: () => api.get('/filters/admin'),
+  create: (data) => api.post('/filters', data),
+  update: (id, data) => api.put(`/filters/${id}`, data),
+  delete: (id) => api.delete(`/filters/${id}`),
+  addOption: (id, data) => api.post(`/filters/${id}/options`, data),
+  removeOption: (id, optionId) => api.delete(`/filters/${id}/options/${optionId}`),
 };
 
 export default api;

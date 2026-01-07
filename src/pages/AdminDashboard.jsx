@@ -24,6 +24,14 @@ const AdminDashboard = () => {
       return;
     }
     fetchStats();
+
+    // Auto-refresh every 10 seconds
+    const intervalId = setInterval(() => {
+      fetchStats();
+    }, 10000);
+
+    // Cleanup interval on unmount
+    return () => clearInterval(intervalId);
   }, [isAuthenticated, user, navigate]);
 
   const fetchStats = async () => {
@@ -189,7 +197,7 @@ const AdminDashboard = () => {
           transition={{ delay: 0.6 }}
         >
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Card 1: Add New Product */}
             <motion.button
               whileHover={{ y: -5, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)" }}

@@ -30,13 +30,13 @@ const Header = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Debounced search
+  // Debounced search - starts from 1 character
   useEffect(() => {
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
     }
 
-    if (searchQuery.trim().length > 2) {
+    if (searchQuery.trim().length >= 1) {
       debounceTimer.current = setTimeout(async () => {
         try {
           const response = await productsAPI.search(searchQuery);
@@ -45,7 +45,7 @@ const Header = () => {
         } catch (error) {
           console.error('Search error:', error);
         }
-      }, 300);
+      }, 200);
     } else {
       setSearchResults([]);
       setShowSearchResults(false);
@@ -129,11 +129,16 @@ const Header = () => {
                   exit={{ opacity: 0, y: -10 }}
                   className="absolute top-full mt-2 w-full bg-white rounded-lg shadow-xl border border-gray-200 max-h-96 overflow-y-auto z-50"
                 >
+                  <div className="px-3 py-2 border-b bg-gray-50">
+                    <p className="text-xs text-gray-500">
+                      {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} for "{searchQuery}"
+                    </p>
+                  </div>
                   {searchResults.map((product) => (
                     <button
                       key={product._id}
                       onClick={() => handleSearchResultClick(product._id)}
-                      className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors text-left"
+                      className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors text-left border-b border-gray-100 last:border-b-0"
                     >
                       <img
                         src={getGoogleDriveImageUrl(product.images[0])}
@@ -145,13 +150,18 @@ const Header = () => {
                           e.target.src = '/images/products/placeholder.svg';
                         }}
                       />
-                      <div className="flex-1">
-                        <p className="font-medium text-sm text-gray-900">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm text-gray-900 truncate">
                           {product.name}
                         </p>
                         <p className="text-xs text-gray-500">{product.category}</p>
+                        {product.description && (
+                          <p className="text-xs text-gray-400 truncate mt-0.5">
+                            {product.description.substring(0, 50)}...
+                          </p>
+                        )}
                       </div>
-                      <div className="text-right">
+                      <div className="text-right flex-shrink-0">
                         <p className="font-semibold text-primary-600">
                           ₹
                           {Math.round(
@@ -167,6 +177,16 @@ const Header = () => {
                       </div>
                     </button>
                   ))}
+                </motion.div>
+              )}
+              {showSearchResults && searchResults.length === 0 && searchQuery.trim().length >= 1 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute top-full mt-2 w-full bg-white rounded-lg shadow-xl border border-gray-200 p-4 z-50"
+                >
+                  <p className="text-sm text-gray-500 text-center">No products found for "{searchQuery}"</p>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -316,11 +336,16 @@ const Header = () => {
                 exit={{ opacity: 0, y: -10 }}
                 className="absolute top-full mt-2 w-full bg-white rounded-lg shadow-xl border border-gray-200 max-h-96 overflow-y-auto z-50"
               >
+                <div className="px-3 py-2 border-b bg-gray-50">
+                  <p className="text-xs text-gray-500">
+                    {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} for "{searchQuery}"
+                  </p>
+                </div>
                 {searchResults.map((product) => (
                   <button
                     key={product._id}
                     onClick={() => handleSearchResultClick(product._id)}
-                    className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors text-left"
+                    className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors text-left border-b border-gray-100 last:border-b-0"
                   >
                     <img
                       src={getGoogleDriveImageUrl(product.images[0])}
@@ -332,13 +357,18 @@ const Header = () => {
                         e.target.src = '/images/products/placeholder.svg';
                       }}
                     />
-                    <div className="flex-1">
-                      <p className="font-medium text-sm text-gray-900">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm text-gray-900 truncate">
                         {product.name}
                       </p>
                       <p className="text-xs text-gray-500">{product.category}</p>
+                      {product.description && (
+                        <p className="text-xs text-gray-400 truncate mt-0.5">
+                          {product.description.substring(0, 40)}...
+                        </p>
+                      )}
                     </div>
-                    <div className="text-right">
+                    <div className="text-right flex-shrink-0">
                       <p className="font-semibold text-primary-600">
                         ₹
                         {Math.round(
@@ -354,6 +384,16 @@ const Header = () => {
                     </div>
                   </button>
                 ))}
+              </motion.div>
+            )}
+            {showSearchResults && searchResults.length === 0 && searchQuery.trim().length >= 1 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute top-full mt-2 w-full bg-white rounded-lg shadow-xl border border-gray-200 p-4 z-50"
+              >
+                <p className="text-sm text-gray-500 text-center">No products found for "{searchQuery}"</p>
               </motion.div>
             )}
           </AnimatePresence>

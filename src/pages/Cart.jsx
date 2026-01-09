@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { ordersAPI, productsAPI } from '../api/api';
+import { ordersAPI, productsAPI, couponsAPI } from '../api/api';
+import { useToast } from '../context/ToastContext';
 import { getGoogleDriveImageUrl } from '../utils/imageHelper';
 import LocationPicker from '../components/LocationPicker';
 
@@ -12,6 +13,7 @@ const Cart = () => {
   const { cartItems, updateQuantity, removeFromCart, getCartTotal, clearCart } =
     useCart();
   const { isAuthenticated, user } = useAuth();
+  const { addToast } = useToast();
 
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [showThankYouModal, setShowThankYouModal] = useState(false);
@@ -20,6 +22,13 @@ const Cart = () => {
   const [selectedAddressIndex, setSelectedAddressIndex] = useState(null);
   const [productsStock, setProductsStock] = useState({});
   const [loadingStock, setLoadingStock] = useState(true);
+  
+  // Coupon states
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
+  
   const [address, setAddress] = useState({
     fullName: user?.name || '',
     phone: '',
@@ -130,7 +139,41 @@ const Cart = () => {
   const itemsTotal = parseFloat(getCartTotal().toFixed(2));
   const deliveryFee = itemsTotal >= 999 ? 0 : 50;
   const otherCharges = 0;
-  const grandTotal = parseFloat((itemsTotal + deliveryFee + otherCharges).toFixed(2));
+  const grandTotal = parseFloat((itemsTotal + deliveryFee + otherCharges - couponDiscount).toFixed(2));
+
+  // Apply coupon handler
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      addToast('Please enter a coupon code', 'error');
+      return;
+    }
+
+    try {
+      setApplyingCoupon(true);
+      const response = await couponsAPI.apply(couponCode, itemsTotal);
+      
+      if (response.data.success) {
+        setAppliedCoupon(response.data.data);
+        setCouponDiscount(response.data.data.discount);
+        addToast(`Coupon applied! You saved ₹${response.data.data.discount}`, 'success');
+      }
+    } catch (error) {
+      console.error('Coupon error:', error);
+      addToast(error.response?.data?.message || 'Invalid coupon code', 'error');
+      setAppliedCoupon(null);
+      setCouponDiscount(0);
+    } finally {
+      setApplyingCoupon(false);
+    }
+  };
+
+  // Remove coupon handler
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponDiscount(0);
+    setCouponCode('');
+    addToast('Coupon removed', 'success');
+  };
 
   // Check if product is available
   const isProductAvailable = (item) => {
@@ -267,11 +310,14 @@ const Cart = () => {
           quantity: item.quantity,
           size: item.selectedSize?.label || null,
           subtotal: item.price * item.quantity,
+          category: item.category || null,
         })),
         shippingAddress: address,
         itemsTotal,
         deliveryFee,
         otherCharges,
+        couponCode: appliedCoupon?.code || null,
+        couponDiscount,
         grandTotal,
       };
 
@@ -540,6 +586,59 @@ const Cart = () => {
                     Add ₹{(999 - itemsTotal).toFixed(2)} more for free delivery!
                   </p>
                 )}
+
+                {/* Coupon Section */}
+                <div className="border-t pt-3">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Have a coupon code?
+                  </label>
+                  {!appliedCoupon ? (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        placeholder="Enter code"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm uppercase"
+                      />
+                      <button
+                        onClick={handleApplyCoupon}
+                        disabled={applyingCoupon}
+                        className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 text-sm font-medium"
+                      >
+                        {applyingCoupon ? 'Applying...' : 'Apply'}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <span className="text-green-700 font-medium">{appliedCoupon.code}</span>
+                          <p className="text-xs text-green-600">
+                            {appliedCoupon.discountType === 'percentage' 
+                              ? `${appliedCoupon.discountValue}% off`
+                              : `₹${appliedCoupon.discountValue} off`}
+                          </p>
+                        </div>
+                        <button
+                          onClick={handleRemoveCoupon}
+                          className="text-red-600 hover:text-red-700 text-sm font-medium"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Coupon Discount */}
+                {couponDiscount > 0 && (
+                  <div className="flex justify-between text-green-600 font-medium">
+                    <span>Coupon Discount</span>
+                    <span>-₹{couponDiscount.toFixed(2)}</span>
+                  </div>
+                )}
+
                 <div className="border-t pt-3 flex justify-between text-lg font-bold">
                   <span>Grand Total</span>
                   <span className="text-primary-600">₹{grandTotal.toFixed(2)}</span>
@@ -755,8 +854,29 @@ const Cart = () => {
 
               {/* Order Summary */}
               <div className="bg-gray-50 p-4 rounded-lg mb-6">
-                <p className="font-semibold mb-2">Order Total: ₹{grandTotal.toFixed(2)}</p>
-                <p className="text-sm text-gray-600">Payment: Cash on Delivery</p>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span>Items Total:</span>
+                    <span>₹{itemsTotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Delivery:</span>
+                    <span className={deliveryFee === 0 ? 'text-green-600' : ''}>
+                      {deliveryFee === 0 ? 'FREE' : `₹${deliveryFee.toFixed(2)}`}
+                    </span>
+                  </div>
+                  {couponDiscount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Coupon ({appliedCoupon?.code}):</span>
+                      <span>-₹{couponDiscount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="border-t pt-1 flex justify-between font-semibold">
+                    <span>Order Total:</span>
+                    <span>₹{grandTotal.toFixed(2)}</span>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600 mt-2">Payment: Cash on Delivery</p>
               </div>
 
               <div className="flex gap-3">

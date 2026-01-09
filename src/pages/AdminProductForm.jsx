@@ -23,6 +23,8 @@ const AdminProductForm = () => {
     featured: false,
     discountPercent: 0,
     sizes: [],
+    replacementDays: 7,
+    cashOnDelivery: true,
   });
   const [hasSizes, setHasSizes] = useState(false);
 
@@ -58,6 +60,8 @@ const AdminProductForm = () => {
         featured: product.featured || false,
         discountPercent: product.discountPercent || 0,
         sizes: product.sizes || [],
+        replacementDays: product.replacementDays ?? 7,
+        cashOnDelivery: product.cashOnDelivery ?? true,
       });
       setHasSizes(product.sizes && product.sizes.length > 0);
     } catch (error) {
@@ -78,6 +82,8 @@ const AdminProductForm = () => {
         images: formData.images.filter(img => img.trim() !== ''),
         featured: formData.featured,
         discountPercent: parseInt(formData.discountPercent) || 0,
+        replacementDays: parseInt(formData.replacementDays) || 0,
+        cashOnDelivery: formData.cashOnDelivery,
       };
 
       // If has sizes, add sizes array, otherwise add stock
@@ -411,6 +417,41 @@ const AdminProductForm = () => {
             <div className="flex items-center">
               <input type="checkbox" id="featured" name="featured" checked={formData.featured} onChange={handleChange} className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded" />
               <label htmlFor="featured" className="ml-2 block text-sm text-gray-700">Mark as Featured Product</label>
+            </div>
+
+            {/* Replacement Days & COD Settings */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Replacement Days
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    name="replacementDays"
+                    value={formData.replacementDays}
+                    onChange={handleChange}
+                    min="0"
+                    className="w-24 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  />
+                  <span className="text-gray-600">days</span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Set to 0 for no replacement policy</p>
+              </div>
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="cashOnDelivery"
+                  name="cashOnDelivery"
+                  checked={formData.cashOnDelivery}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                />
+                <label htmlFor="cashOnDelivery" className="ml-2 block text-sm text-gray-700">
+                  Cash on Delivery Available
+                </label>
+              </div>
             </div>
           </div>
 

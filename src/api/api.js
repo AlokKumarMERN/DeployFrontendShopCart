@@ -48,6 +48,19 @@ export const authAPI = {
   forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
   resetPassword: (token, password) => api.post(`/auth/reset-password/${token}`, { password }),
   verifyResetToken: (token) => api.get(`/auth/verify-reset-token/${token}`),
+  // Wishlist
+  getWishlist: () => api.get('/auth/wishlist'),
+  checkWishlist: (productId) => api.get(`/auth/wishlist/check/${productId}`),
+  addToWishlist: (productId) => api.post(`/auth/wishlist/${productId}`),
+  removeFromWishlist: (productId) => api.delete(`/auth/wishlist/${productId}`),
+  // Notifications
+  getNotifications: () => api.get('/auth/notifications'),
+  markNotificationRead: (notificationId) => api.put(`/auth/notifications/${notificationId}/read`),
+  markAllNotificationsRead: () => api.put('/auth/notifications/read-all'),
+  deleteNotification: (notificationId) => api.delete(`/auth/notifications/${notificationId}`),
+  // Settings
+  getSettings: () => api.get('/auth/settings'),
+  updateSettings: (settings) => api.put('/auth/settings', settings),
 };
 
 // Products API
@@ -69,10 +82,25 @@ export const productsAPI = {
 export const ordersAPI = {
   create: (data) => api.post('/orders', data),
   getAll: () => api.get('/orders'),
+  getAllAdmin: () => api.get('/orders?all=true'),
   getById: (id) => api.get(`/orders/${id}`),
+  getInvoice: (id) => api.get(`/orders/${id}/invoice`),
   updateStatus: (id, data) => api.put(`/orders/${id}/status`, data),
   cancel: (id, reason) => api.put(`/orders/${id}/cancel`, { reason }),
   getStats: () => api.get('/orders/admin/stats'),
+};
+
+// Replacements API
+export const replacementsAPI = {
+  // User endpoints
+  checkEligibility: (orderId, productId) => api.get(`/replacements/check/${orderId}/${productId}`),
+  request: (data) => api.post('/replacements', data),
+  getUserReplacements: () => api.get('/replacements'),
+  getById: (id) => api.get(`/replacements/${id}`),
+  // Admin endpoints
+  getAll: () => api.get('/replacements/admin/all'),
+  getStats: () => api.get('/replacements/admin/stats'),
+  update: (id, data) => api.put(`/replacements/${id}`, data),
 };
 
 // Contact API
@@ -103,6 +131,27 @@ export const filtersAPI = {
   delete: (id) => api.delete(`/filters/${id}`),
   addOption: (id, data) => api.post(`/filters/${id}/options`, data),
   removeOption: (id, optionId) => api.delete(`/filters/${id}/options/${optionId}`),
+};
+
+// Coupons API
+export const couponsAPI = {
+  // Admin endpoints
+  getAll: () => api.get('/coupons/admin'),
+  getById: (id) => api.get(`/coupons/admin/${id}`),
+  getStats: () => api.get('/coupons/admin/stats'),
+  create: (data) => api.post('/coupons', data),
+  update: (id, data) => api.put(`/coupons/${id}`, data),
+  delete: (id) => api.delete(`/coupons/${id}`),
+  // User endpoints
+  apply: (code, orderAmount) => api.post('/coupons/apply', { code, orderAmount }),
+};
+
+// Customers API (Admin)
+export const customersAPI = {
+  getAll: () => api.get('/customers/admin'),
+  getById: (id) => api.get(`/customers/admin/${id}`),
+  getStats: () => api.get('/customers/admin/stats'),
+  matchCriteria: (criteria) => api.post('/customers/admin/match-criteria', criteria),
 };
 
 export default api;

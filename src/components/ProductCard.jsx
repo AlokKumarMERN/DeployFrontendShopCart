@@ -3,8 +3,9 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getGoogleDriveImageUrl } from '../utils/imageHelper';
+import { authAPI } from '../api/api';
 
 const ProductCard = ({ product }) => {
   const navigate = useNavigate();
@@ -12,6 +13,45 @@ const ProductCard = ({ product }) => {
   const { isAuthenticated } = useAuth();
   const { addToast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+
+  // Check if product is in wishlist
+  useEffect(() => {
+    if (isAuthenticated && product?._id) {
+      authAPI.checkWishlist(product._id)
+        .then(res => setIsWishlisted(res.data.data.isInWishlist))
+        .catch(() => setIsWishlisted(false));
+    }
+  }, [isAuthenticated, product?._id]);
+
+  const handleWishlistToggle = async (e) => {
+    e.stopPropagation();
+    
+    if (!isAuthenticated) {
+      addToast('Please login to add to wishlist', 'error');
+      navigate('/login');
+      return;
+    }
+
+    try {
+      setWishlistLoading(true);
+      if (isWishlisted) {
+        await authAPI.removeFromWishlist(product._id);
+        setIsWishlisted(false);
+        addToast('Removed from wishlist', 'success');
+      } else {
+        await authAPI.addToWishlist(product._id);
+        setIsWishlisted(true);
+        addToast('Added to wishlist', 'success');
+      }
+    } catch (error) {
+      console.error('Wishlist error:', error);
+      addToast('Failed to update wishlist', 'error');
+    } finally {
+      setWishlistLoading(false);
+    }
+  };
 
   // Calculate price display for products with and without variants
   const getPriceInfo = () => {
@@ -99,6 +139,33 @@ const ProductCard = ({ product }) => {
     >
       {/* Product Image */}
       <div className="relative aspect-square overflow-hidden bg-gray-100">
+        {/* Wishlist Heart Button */}
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={handleWishlistToggle}
+          disabled={wishlistLoading}
+          className={`absolute top-2 right-2 z-10 p-2 rounded-full shadow-md transition-all duration-300 ${
+            isWishlisted 
+              ? 'bg-red-500 text-white' 
+              : 'bg-white text-gray-600 hover:text-red-500'
+          }`}
+        >
+          <svg
+            className="w-5 h-5"
+            fill={isWishlisted ? 'currentColor' : 'none'}
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+            />
+          </svg>
+        </motion.button>
+
         <motion.img
           whileHover={{ scale: 1.15 }}
           transition={{ duration: 0.4 }}
@@ -134,7 +201,7 @@ const ProductCard = ({ product }) => {
             initial={{ x: 100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 0.5 }}
-            className="absolute top-2 right-2 bg-yellow-400 text-gray-900 text-xs font-bold px-2 py-1 rounded shadow-lg"
+            className="absolute top-12 right-2 bg-yellow-400 text-gray-900 text-xs font-bold px-2 py-1 rounded shadow-lg"
           >
             ★ Featured
           </motion.div>

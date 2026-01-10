@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { productsAPI } from '../api/api';
+import { productsAPI, authAPI } from '../api/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getGoogleDriveImageUrl } from '../utils/imageHelper';
 
@@ -13,9 +13,42 @@ const Header = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
   const searchRef = useRef(null);
   const mobileSearchRef = useRef(null);
   const debounceTimer = useRef(null);
+
+  // Fetch notification count when authenticated
+  useEffect(() => {
+    const fetchNotificationCount = async () => {
+      if (isAuthenticated) {
+        try {
+          const response = await authAPI.getNotificationCount();
+          setNotificationCount(response.data.data.unreadCount || 0);
+        } catch (error) {
+          console.error('Error fetching notification count:', error);
+        }
+      } else {
+        setNotificationCount(0);
+      }
+    };
+    
+    fetchNotificationCount();
+    
+    // Refresh notification count every 30 seconds
+    const intervalId = setInterval(fetchNotificationCount, 30000);
+    
+    // Listen for notification read events from Profile page
+    const handleNotificationsRead = () => {
+      setNotificationCount(0);
+    };
+    window.addEventListener('notificationsMarkedRead', handleNotificationsRead);
+    
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('notificationsMarkedRead', handleNotificationsRead);
+    };
+  }, [isAuthenticated]);
 
   // Close search results when clicking outside
   useEffect(() => {
@@ -246,10 +279,15 @@ const Header = () => {
             {/* User Login Indicator - Show for both logged in and not logged in */}
             <div className="flex items-center gap-2 pl-4 border-l border-gray-300">
               {isAuthenticated && user ? (
-                <Link to="/profile" className="flex items-center hover:opacity-80 transition-all duration-300 hover:scale-110" title={user.name}>
+                <Link to="/profile" className="relative flex items-center hover:opacity-80 transition-all duration-300 hover:scale-110" title={user.name}>
                   <div className="w-9 h-9 rounded-full bg-primary-600 flex items-center justify-center text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all">
                     {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                   </div>
+                  {notificationCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+                      {notificationCount > 9 ? '9+' : notificationCount}
+                    </span>
+                  )}
                 </Link>
               ) : (
                 <Link to="/login" className="flex items-center hover:opacity-80 transition-all duration-300 hover:scale-110" title="Login">
@@ -275,12 +313,17 @@ const Header = () => {
           {isAuthenticated && user ? (
             <Link
               to="/profile"
-              className="lg:hidden flex items-center"
+              className="lg:hidden flex items-center relative"
               title={user.name}
             >
               <div className="w-9 h-9 rounded-full bg-primary-600 flex items-center justify-center text-white font-semibold text-sm">
                 {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
               </div>
+              {notificationCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+                  {notificationCount > 9 ? '9+' : notificationCount}
+                </span>
+              )}
             </Link>
           ) : (
             <Link

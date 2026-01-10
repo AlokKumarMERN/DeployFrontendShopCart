@@ -59,8 +59,10 @@ const Login = () => {
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
       
-      // Redirect based on where they came from
-      if (redirect === 'contact-email') {
+      // Redirect admin to dashboard
+      if (result.data?.role === 'admin') {
+        navigate('/admin');
+      } else if (redirect === 'contact-email') {
         navigate('/');
       } else if (redirect === 'cart') {
         navigate('/cart');

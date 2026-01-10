@@ -55,6 +55,7 @@ export const authAPI = {
   removeFromWishlist: (productId) => api.delete(`/auth/wishlist/${productId}`),
   // Notifications
   getNotifications: () => api.get('/auth/notifications'),
+  getNotificationCount: () => api.get('/auth/notifications/count'),
   markNotificationRead: (notificationId) => api.put(`/auth/notifications/${notificationId}/read`),
   markAllNotificationsRead: () => api.put('/auth/notifications/read-all'),
   deleteNotification: (notificationId) => api.delete(`/auth/notifications/${notificationId}`),

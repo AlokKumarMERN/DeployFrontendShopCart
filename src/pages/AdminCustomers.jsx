@@ -138,6 +138,15 @@ const AdminCustomers = () => {
     }
     fetchCustomers();
     fetchStats();
+
+    // Auto-refresh every 10 seconds
+    const intervalId = setInterval(() => {
+      fetchCustomers();
+      fetchStats();
+    }, 10000);
+
+    // Cleanup interval on unmount
+    return () => clearInterval(intervalId);
   }, [isAuthenticated, user, navigate]);
 
   const fetchCustomers = async () => {
@@ -282,12 +291,20 @@ const AdminCustomers = () => {
               <FiUsers className="text-blue-600" />
               Customer Analytics
             </h1>
-            <button 
-              onClick={() => { fetchCustomers(); fetchStats(); }}
-              className="p-2 hover:bg-gray-100 rounded-lg"
-            >
-              <FiRefreshCw className="w-5 h-5 text-gray-600" />
-            </button>
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => { fetchCustomers(); fetchStats(); }}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <FiRefreshCw className="w-5 h-5 text-gray-600" />
+              </button>
+              <button
+                onClick={() => navigate('/admin')}
+                className="px-4 py-2 text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg text-sm"
+              >
+                ← Back to Dashboard
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -342,8 +359,9 @@ const AdminCustomers = () => {
                     <FiShoppingBag className="w-5 h-5 text-purple-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Avg Customer Value</p>
-                    <p className="text-xl font-bold text-gray-800">{formatCurrency(stats.averageCustomerValue)}</p>
+                    <p className="text-sm text-gray-500">Customers Spent</p>
+                    <p className="text-xl font-bold text-gray-800">{formatCurrency(customers.reduce((sum, c) => sum + (c.stats?.totalSpent || 0), 0))}</p>
+                    <p className="text-xs text-gray-400">Sum of all customers</p>
                   </div>
                 </div>
               </motion.div>
@@ -1001,6 +1019,21 @@ const AdminCustomers = () => {
                                     </span>
                                   </div>
                                 </div>
+                                
+                                {/* Cancellation Details */}
+                                {order.orderStatus === 'Cancelled' && order.cancellation && (
+                                  <div className="mb-3 p-3 bg-red-50 rounded-lg border border-red-200">
+                                    <p className="text-sm font-semibold text-red-800 mb-1">❌ Cancellation Details</p>
+                                    <p className="text-sm text-red-700">
+                                      <strong>Reason:</strong> {order.cancellation.reason || 'Not specified'}
+                                    </p>
+                                    <p className="text-xs text-red-600 mt-1">
+                                      Cancelled by <span className="font-medium capitalize">{order.cancellation.cancelledBy || 'Unknown'}</span>
+                                      {order.cancellation.cancelledAt && ` on ${formatDate(order.cancellation.cancelledAt)}`}
+                                    </p>
+                                  </div>
+                                )}
+                                
                                 <div className="flex flex-wrap gap-2">
                                   {order.items.slice(0, 3).map((item, idx) => (
                                     <div key={idx} className="flex items-center gap-2 bg-white px-2 py-1 rounded text-sm">

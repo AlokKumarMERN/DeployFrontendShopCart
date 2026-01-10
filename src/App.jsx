@@ -26,8 +26,31 @@ import GoogleCallback from './pages/auth/GoogleCallback';
 function App() {
   const location = useLocation();
   
+  // Check if current route is an admin route
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  
   // Hide footer on mobile for Home and Shopping pages
   const hideFooterOnMobile = location.pathname === '/' || location.pathname === '/shopping';
+
+  // Admin routes - no header, footer, or bottom nav
+  if (isAdminRoute) {
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <ScrollToTop />
+        <Routes>
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/products" element={<AdminProducts />} />
+          <Route path="/admin/products/new" element={<AdminProductForm />} />
+          <Route path="/admin/products/edit/:id" element={<AdminProductForm />} />
+          <Route path="/admin/orders" element={<AdminOrders />} />
+          <Route path="/admin/filters" element={<AdminFilters />} />
+          <Route path="/admin/coupons" element={<AdminCoupons />} />
+          <Route path="/admin/customers" element={<AdminCustomers />} />
+          <Route path="/admin/replacements" element={<AdminReplacements />} />
+        </Routes>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -46,15 +69,6 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/auth/google/callback" element={<GoogleCallback />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/products" element={<AdminProducts />} />
-          <Route path="/admin/products/new" element={<AdminProductForm />} />
-          <Route path="/admin/products/edit/:id" element={<AdminProductForm />} />
-          <Route path="/admin/orders" element={<AdminOrders />} />
-          <Route path="/admin/filters" element={<AdminFilters />} />
-          <Route path="/admin/coupons" element={<AdminCoupons />} />
-          <Route path="/admin/customers" element={<AdminCustomers />} />
-          <Route path="/admin/replacements" element={<AdminReplacements />} />
         </Routes>
       </main>
       <div className={hideFooterOnMobile ? 'hidden lg:block' : ''}>

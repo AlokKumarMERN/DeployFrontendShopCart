@@ -466,6 +466,8 @@ const Profile = () => {
       await authAPI.markAllNotificationsRead();
       setNotifications(notifications.map(n => ({ ...n, isRead: true })));
       addToast('All notifications marked as read', 'success');
+      // Dispatch event to update notification count in Header
+      window.dispatchEvent(new CustomEvent('notificationsMarkedRead'));
     } catch (error) {
       console.error('Error marking all notifications read:', error);
     }
@@ -1096,11 +1098,19 @@ const Profile = () => {
                           ❌ Order Cancelled
                         </p>
                         <p className="text-sm text-red-700 mb-1">
-                          <span className="font-medium">Reason:</span> {order.cancellation.reason}
+                          <span className="font-medium">Reason:</span> {order.cancellation.reason || 'Not specified'}
                         </p>
                         <p className="text-sm text-red-600">
-                          Cancelled on {new Date(order.cancellation.cancelledAt).toLocaleDateString('en-IN')} by {order.cancellation.cancelledBy}
+                          Cancelled on {new Date(order.cancellation.cancelledAt).toLocaleDateString('en-IN')} by{' '}
+                          <span className="font-medium">
+                            {order.cancellation.cancelledBy === 'admin' ? 'Store Admin' : 'You'}
+                          </span>
                         </p>
+                        {order.cancellation.cancelledBy === 'admin' && (
+                          <p className="text-xs text-red-500 mt-2 italic">
+                            This order was cancelled by the store admin. If you have any questions, please contact support.
+                          </p>
+                        )}
                       </div>
                     )}
 
@@ -1354,6 +1364,32 @@ const Profile = () => {
                           <h3 className="font-medium text-gray-900">{notification.title}</h3>
                         </div>
                         <p className="text-gray-600 text-sm">{notification.message}</p>
+                        {/* Show coupon code prominently for coupon notifications */}
+                        {notification.type === 'coupon' && notification.data?.couponCode && (
+                          <div className="mt-3 p-3 bg-gradient-to-r from-primary-500 to-primary-600 rounded-lg">
+                            <p className="text-white text-xs mb-1">Your Exclusive Coupon Code:</p>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono font-bold text-lg text-white bg-white/20 px-3 py-1 rounded">
+                                {notification.data.couponCode}
+                              </span>
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(notification.data.couponCode);
+                                  alert('Coupon code copied!');
+                                }}
+                                className="text-white hover:bg-white/20 p-1 rounded"
+                                title="Copy code"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                              </button>
+                            </div>
+                            {notification.data.minOrderAmount > 0 && (
+                              <p className="text-white/80 text-xs mt-2">Min. order: ₹{notification.data.minOrderAmount}</p>
+                            )}
+                          </div>
+                        )}
                         <p className="text-xs text-gray-400 mt-2">
                           {new Date(notification.createdAt).toLocaleDateString('en-IN', {
                             day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
@@ -1402,8 +1438,27 @@ const Profile = () => {
               </div>
             ) : (
               <div className="space-y-6">
-                {/* Notification Settings */}
+                {/* Phone Number for SMS */}
                 <div>
+                  <h3 className="font-medium text-gray-900 mb-4">Contact Information</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Phone Number <span className="text-gray-400 text-xs">(for SMS notifications & offers)</span>
+                      </label>
+                      <input
+                        type="tel"
+                        value={settings.phone || ''}
+                        onChange={(e) => setSettings({ ...settings, phone: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                        placeholder="+91 9876543210"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Notification Settings */}
+                <div className="border-t pt-6">
                   <h3 className="font-medium text-gray-900 mb-4">Notification Preferences</h3>
                   <div className="space-y-4">
                     <label className="flex items-center justify-between">

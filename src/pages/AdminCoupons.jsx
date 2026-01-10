@@ -84,6 +84,7 @@ const AdminCoupons = () => {
       hasWishlistItems: null,
     },
     notifyUsers: false,
+    sendEmail: false,
   });
   const [matchingUsersCount, setMatchingUsersCount] = useState(null);
   const [checkingUsers, setCheckingUsers] = useState(false);
@@ -94,7 +95,17 @@ const AdminCoupons = () => {
       return;
     }
     fetchCoupons();
-  }, [isAuthenticated, user, navigate]);
+
+    // Auto-refresh every 10 seconds (only when modal is closed)
+    const intervalId = setInterval(() => {
+      if (!showModal) {
+        fetchCoupons();
+      }
+    }, 10000);
+
+    // Cleanup interval on unmount
+    return () => clearInterval(intervalId);
+  }, [isAuthenticated, user, navigate, showModal]);
 
   const fetchCoupons = async () => {
     try {
@@ -133,6 +144,7 @@ const AdminCoupons = () => {
         hasWishlistItems: null,
       },
       notifyUsers: false,
+      sendEmail: false,
     });
     setMatchingUsersCount(null);
   };
@@ -168,6 +180,8 @@ const AdminCoupons = () => {
         hasWishlistItems: null,
       },
       notifyUsers: false,
+      sendEmail: false,
+      sendSMS: false,
     });
     setMatchingUsersCount(coupon.eligibleUsers?.length || null);
     setShowModal(true);
@@ -200,6 +214,8 @@ const AdminCoupons = () => {
           hasWishlistItems: formData.targeting.hasWishlistItems,
         } : { enabled: false },
         notifyUsers: formData.notifyUsers,
+        sendEmail: formData.sendEmail,
+        sendSMS: formData.sendSMS,
       };
 
       if (editingCoupon) {
@@ -207,11 +223,17 @@ const AdminCoupons = () => {
         addToast('Coupon updated successfully', 'success');
       } else {
         const response = await couponsAPI.create(payload);
+        let message = 'Coupon created successfully';
         if (response.data.eligibleCount > 0) {
-          addToast(`Coupon created! ${response.data.eligibleCount} users are eligible.`, 'success');
-        } else {
-          addToast('Coupon created successfully', 'success');
+          message = `Coupon created! ${response.data.eligibleCount} users are eligible.`;
         }
+        if (formData.sendEmail) {
+          message += ' Emails are being sent.';
+        }
+        if (formData.sendSMS) {
+          message += ' SMS notifications are being sent.';
+        }
+        addToast(message, 'success');
       }
       
       setShowModal(false);
@@ -303,25 +325,25 @@ const AdminCoupons = () => {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container-custom">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Manage Coupons</h1>
+            <p className="text-gray-600">Create and manage discount coupons</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={openCreateModal}
+              className="btn-primary flex items-center gap-2"
+            >
+              <FiPlus /> Add Coupon
+            </button>
             <button
               onClick={() => navigate('/admin')}
-              className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
+              className="px-4 py-2 text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg"
             >
-              <FiArrowLeft />
+              ← Back to Dashboard
             </button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Manage Coupons</h1>
-              <p className="text-gray-600">Create and manage discount coupons</p>
-            </div>
           </div>
-          <button
-            onClick={openCreateModal}
-            className="btn-primary flex items-center gap-2"
-          >
-            <FiPlus /> Add Coupon
-          </button>
         </div>
 
         {/* Coupons List */}
@@ -819,18 +841,43 @@ const AdminCoupons = () => {
                         </button>
                       </div>
 
-                      {/* Notify Users */}
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          id="notifyUsers"
-                          checked={formData.notifyUsers}
-                          onChange={(e) => setFormData({ ...formData, notifyUsers: e.target.checked })}
-                          className="w-4 h-4 text-purple-600 rounded"
-                        />
-                        <label htmlFor="notifyUsers" className="text-sm text-gray-700">
-                          Notify eligible users about this coupon
-                        </label>
+                      {/* Notification Options */}
+                      <div className="border-t pt-4 mt-4">
+                        <h4 className="text-sm font-medium text-gray-700 mb-3">📢 Notification Options</h4>
+                        
+                        {/* In-App Notification */}
+                        <div className="flex items-center gap-2 mb-3">
+                          <input
+                            type="checkbox"
+                            id="notifyUsers"
+                            checked={formData.notifyUsers}
+                            onChange={(e) => setFormData({ ...formData, notifyUsers: e.target.checked })}
+                            className="w-4 h-4 text-purple-600 rounded"
+                          />
+                          <label htmlFor="notifyUsers" className="text-sm text-gray-700">
+                            🔔 In-app notification (Profile → Notifications)
+                          </label>
+                        </div>
+
+                        {/* Email Notification */}
+                        <div className="flex items-center gap-2 mb-3">
+                          <input
+                            type="checkbox"
+                            id="sendEmail"
+                            checked={formData.sendEmail}
+                            onChange={(e) => setFormData({ ...formData, sendEmail: e.target.checked })}
+                            className="w-4 h-4 text-blue-600 rounded"
+                          />
+                          <label htmlFor="sendEmail" className="text-sm text-gray-700">
+                            📧 Send email to registered email addresses
+                          </label>
+                        </div>
+
+                        {formData.sendEmail && (
+                          <p className="text-xs text-amber-600 mt-3 bg-amber-50 p-2 rounded">
+                            ⚠️ Emails will be sent in background after coupon creation.
+                          </p>
+                        )}
                       </div>
                     </div>
                   )}
@@ -860,5 +907,6 @@ const AdminCoupons = () => {
     </div>
   );
 };
+
 
 export default AdminCoupons;

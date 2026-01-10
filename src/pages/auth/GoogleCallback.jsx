@@ -35,7 +35,13 @@ const GoogleCallback = () => {
           setTimeout(() => loadCartFromBackend(), 100);
           
           addToast(`Welcome ${userData.name}!`, 'success');
-          navigate('/profile');
+          
+          // Redirect admin to dashboard, others to profile
+          if (userData.role === 'admin') {
+            navigate('/admin');
+          } else {
+            navigate('/profile');
+          }
         } catch (error) {
           console.error('Error parsing user data:', error);
           addToast('Authentication error. Please try again.', 'error');

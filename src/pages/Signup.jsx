@@ -14,6 +14,7 @@ const Signup = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: '',
   });
@@ -61,7 +62,7 @@ const Signup = () => {
 
     setLoading(true);
 
-    const result = await signup(formData.name, formData.email, formData.password, loadCartFromBackend);
+    const result = await signup(formData.name, formData.email, formData.password, formData.phone, loadCartFromBackend);
 
     if (result.success) {
       navigate('/profile');
@@ -124,6 +125,21 @@ const Signup = () => {
               className="input-field"
               placeholder="your.email@example.com"
               required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Phone Number <span className="text-gray-400 text-xs">(for order updates & offers)</span>
+            </label>
+            <input
+              type="tel"
+              value={formData.phone}
+              onChange={(e) =>
+                setFormData({ ...formData, phone: e.target.value })
+              }
+              className="input-field"
+              placeholder="+91 9876543210"
             />
           </div>
 

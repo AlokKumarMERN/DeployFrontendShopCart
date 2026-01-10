@@ -17,6 +17,7 @@ const AdminOrders = () => {
     deliveryAgentName: '',
     deliveryAgentPhone: '',
     estimatedDeliveryDate: '',
+    cancellationReason: '',
   });
 
   useEffect(() => {
@@ -25,6 +26,14 @@ const AdminOrders = () => {
       return;
     }
     fetchOrders();
+
+    // Auto-refresh every 10 seconds
+    const intervalId = setInterval(() => {
+      fetchOrders();
+    }, 10000);
+
+    // Cleanup interval on unmount
+    return () => clearInterval(intervalId);
   }, [isAuthenticated, user, navigate]);
 
   const fetchOrders = async () => {
@@ -48,12 +57,20 @@ const AdminOrders = () => {
       deliveryAgentName: order.deliveryAgent?.name || '',
       deliveryAgentPhone: order.deliveryAgent?.phone || '',
       estimatedDeliveryDate: order.estimatedDeliveryDate ? new Date(order.estimatedDeliveryDate).toISOString().split('T')[0] : '',
+      cancellationReason: order.cancellation?.reason || '',
     });
     setShowModal(true);
   };
 
   const handleUpdateOrder = async (e) => {
     e.preventDefault();
+    
+    // Validate cancellation reason is required when cancelling
+    if (updateData.status === 'Cancelled' && !updateData.cancellationReason.trim()) {
+      alert('Please provide a reason for cancellation');
+      return;
+    }
+    
     try {
       const payload = {
         status: updateData.status,
@@ -69,6 +86,11 @@ const AdminOrders = () => {
       if (updateData.estimatedDeliveryDate) {
         payload.estimatedDeliveryDate = updateData.estimatedDeliveryDate;
       }
+      
+      // Add cancellation reason if cancelling
+      if (updateData.status === 'Cancelled') {
+        payload.cancellationReason = updateData.cancellationReason;
+      }
 
       await ordersAPI.updateStatus(selectedOrder._id, payload);
       
@@ -79,7 +101,12 @@ const AdminOrders = () => {
               ...order, 
               orderStatus: updateData.status,
               deliveryAgent: payload.deliveryAgent || order.deliveryAgent,
-              estimatedDeliveryDate: payload.estimatedDeliveryDate || order.estimatedDeliveryDate
+              estimatedDeliveryDate: payload.estimatedDeliveryDate || order.estimatedDeliveryDate,
+              cancellation: updateData.status === 'Cancelled' ? {
+                reason: updateData.cancellationReason,
+                cancelledAt: new Date().toISOString(),
+                cancelledBy: 'admin'
+              } : order.cancellation
             } 
           : order
       ));
@@ -114,10 +141,18 @@ const AdminOrders = () => {
         <motion.div 
           initial={{ opacity: 0, y: -20 }} 
           animate={{ opacity: 1, y: 0 }} 
-          className="mb-8"
+          className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8"
         >
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Manage Orders</h1>
-          <p className="text-gray-600">View and update order statuses, delivery details</p>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Manage Orders</h1>
+            <p className="text-gray-600">View and update order statuses, delivery details</p>
+          </div>
+          <button
+            onClick={() => navigate('/admin')}
+            className="px-4 py-2 text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg"
+          >
+            ← Back to Dashboard
+          </button>
         </motion.div>
 
         {/* Filter Buttons */}
@@ -390,6 +425,26 @@ const AdminOrders = () => {
                       <option value="Cancelled">Cancelled</option>
                     </select>
                   </div>
+
+                  {/* Cancellation Reason - shown only when status is Cancelled */}
+                  {updateData.status === 'Cancelled' && (
+                    <div>
+                      <label className="block text-sm font-medium text-red-700 mb-2">
+                        Cancellation Reason * (Required)
+                      </label>
+                      <textarea
+                        value={updateData.cancellationReason}
+                        onChange={(e) => setUpdateData({ ...updateData, cancellationReason: e.target.value })}
+                        placeholder="Please specify why this order is being cancelled..."
+                        rows={3}
+                        required
+                        className="w-full px-4 py-2 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-red-50"
+                      />
+                      <p className="text-xs text-red-600 mt-1">
+                        This reason will be visible to the customer.
+                      </p>
+                    </div>
+                  )}
 
                   {/* Delivery Agent Name */}
                   <div>

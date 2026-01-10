@@ -37,6 +37,15 @@ const AdminReplacements = () => {
     }
     fetchReplacements();
     fetchStats();
+
+    // Auto-refresh every 10 seconds
+    const intervalId = setInterval(() => {
+      fetchReplacements();
+      fetchStats();
+    }, 10000);
+
+    // Cleanup interval on unmount
+    return () => clearInterval(intervalId);
   }, [isAuthenticated, user]);
 
   const fetchReplacements = async () => {

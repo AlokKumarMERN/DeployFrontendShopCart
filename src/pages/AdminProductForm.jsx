@@ -218,9 +218,29 @@ const AdminProductForm = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container-custom max-w-4xl">
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{id ? 'Edit Product' : 'Add New Product'}</h1>
-          <p className="text-gray-600">{id ? 'Update product details' : 'Create a new product listing'}</p>
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => navigate('/admin/products')}
+              className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </button>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{id ? 'Edit Product' : 'Add New Product'}</h1>
+              <p className="text-gray-600">{id ? 'Update product details' : 'Create a new product listing'}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/admin')}
+            className="px-4 py-2 text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg"
+          >
+            ← Back to Dashboard
+          </button>
         </motion.div>
         
         <motion.form initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">

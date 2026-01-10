@@ -19,6 +19,14 @@ const AdminProducts = () => {
       return;
     }
     fetchProducts();
+
+    // Auto-refresh every 10 seconds
+    const intervalId = setInterval(() => {
+      fetchProducts();
+    }, 10000);
+
+    // Cleanup interval on unmount
+    return () => clearInterval(intervalId);
   }, [isAuthenticated, user, navigate]);
 
   const fetchProducts = async () => {
@@ -67,21 +75,29 @@ const AdminProducts = () => {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex justify-between items-center mb-8"
+          className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8"
         >
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Manage Products</h1>
             <p className="text-gray-600">Add, edit, or remove products from your store</p>
           </div>
-          <button
-            onClick={() => navigate('/admin/products/new')}
-            className="btn-primary flex items-center gap-2"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Add Product
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/admin/products/new')}
+              className="btn-primary flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add Product
+            </button>
+            <button
+              onClick={() => navigate('/admin')}
+              className="px-4 py-2 text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg"
+            >
+              ← Back to Dashboard
+            </button>
+          </div>
         </motion.div>
 
         <motion.div

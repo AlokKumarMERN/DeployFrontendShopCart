@@ -1,9 +1,16 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { filtersAPI } from '../api/api';
 import { useToast } from '../context/ToastContext';
 
 // Inline SVG icons
+const FiArrowLeft = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+  </svg>
+);
+
 const FiPlus = ({ size = 20 }) => (
   <svg width={size} height={size} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -47,6 +54,7 @@ const FiChevronUp = () => (
 );
 
 const AdminFilters = () => {
+  const navigate = useNavigate();
   const [filters, setFilters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -67,6 +75,14 @@ const AdminFilters = () => {
 
   useEffect(() => {
     fetchFilters();
+
+    // Auto-refresh every 10 seconds
+    const intervalId = setInterval(() => {
+      fetchFilters();
+    }, 10000);
+
+    // Cleanup interval on unmount
+    return () => clearInterval(intervalId);
   }, []);
 
   const fetchFilters = async () => {
@@ -196,17 +212,25 @@ const AdminFilters = () => {
   return (
     <div className="p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Product Filters</h1>
           <p className="text-gray-600">Manage custom filters for the shopping page</p>
         </div>
-        <button
-          onClick={openCreateModal}
-          className="btn-primary flex items-center gap-2"
-        >
-          <FiPlus /> Add Filter
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={openCreateModal}
+            className="btn-primary flex items-center gap-2"
+          >
+            <FiPlus /> Add Filter
+          </button>
+          <button
+            onClick={() => navigate('/admin')}
+            className="px-4 py-2 text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg"
+          >
+            ← Back to Dashboard
+          </button>
+        </div>
       </div>
 
       {/* Filters List */}

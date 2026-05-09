@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { ordersAPI } from '../api/api';
+import { ordersAPI, deliveryBoysAPI } from '../api/api';
 
 const AdminOrders = () => {
   const navigate = useNavigate();
@@ -12,6 +12,8 @@ const AdminOrders = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [deliveryBoys, setDeliveryBoys] = useState([]);
+  const [selectedDeliveryBoy, setSelectedDeliveryBoy] = useState('');
   const [updateData, setUpdateData] = useState({
     status: '',
     deliveryAgentName: '',
@@ -26,6 +28,7 @@ const AdminOrders = () => {
       return;
     }
     fetchOrders();
+    fetchDeliveryBoys();
 
     // Auto-refresh every 10 seconds
     const intervalId = setInterval(() => {
@@ -35,6 +38,15 @@ const AdminOrders = () => {
     // Cleanup interval on unmount
     return () => clearInterval(intervalId);
   }, [isAuthenticated, user, navigate]);
+
+  const fetchDeliveryBoys = async () => {
+    try {
+      const response = await deliveryBoysAPI.getActive();
+      setDeliveryBoys(response.data.data || []);
+    } catch (error) {
+      console.error('Error fetching delivery boys:', error);
+    }
+  };
 
   const fetchOrders = async () => {
     try {
@@ -52,6 +64,7 @@ const AdminOrders = () => {
 
   const openUpdateModal = (order) => {
     setSelectedOrder(order);
+    setSelectedDeliveryBoy(order.deliveryBoy?._id || '');
     setUpdateData({
       status: order.orderStatus,
       deliveryAgentName: order.deliveryAgent?.name || '',
@@ -60,6 +73,27 @@ const AdminOrders = () => {
       cancellationReason: order.cancellation?.reason || '',
     });
     setShowModal(true);
+  };
+
+  const handleDeliveryBoyChange = (deliveryBoyId) => {
+    setSelectedDeliveryBoy(deliveryBoyId);
+    
+    if (deliveryBoyId) {
+      const deliveryBoy = deliveryBoys.find(db => db._id === deliveryBoyId);
+      if (deliveryBoy) {
+        setUpdateData({
+          ...updateData,
+          deliveryAgentName: deliveryBoy.name,
+          deliveryAgentPhone: deliveryBoy.phone,
+        });
+      }
+    } else {
+      setUpdateData({
+        ...updateData,
+        deliveryAgentName: '',
+        deliveryAgentPhone: '',
+      });
+    }
   };
 
   const handleUpdateOrder = async (e) => {
@@ -75,6 +109,11 @@ const AdminOrders = () => {
       const payload = {
         status: updateData.status,
       };
+
+      // Add delivery boy if selected
+      if (selectedDeliveryBoy) {
+        payload.deliveryBoyId = selectedDeliveryBoy;
+      }
 
       if (updateData.deliveryAgentName || updateData.deliveryAgentPhone) {
         payload.deliveryAgent = {
@@ -126,10 +165,81 @@ const AdminOrders = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'Delivered': return 'bg-green-100 text-green-800';
+      case 'Out for Delivery': return 'bg-purple-100 text-purple-800';
       case 'Shipped': return 'bg-blue-100 text-blue-800';
       case 'Processing': return 'bg-yellow-100 text-yellow-800';
       case 'Cancelled': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const handleExportExactDelivery = async () => {
+    try {
+      const response = await ordersAPI.exportExactDelivery({ status: statusFilter });
+      const data = response.data.data;
+      
+      if (data.length === 0) {
+        alert('No exact delivery orders to export');
+        return;
+      }
+      
+      // Convert to CSV
+      const headers = Object.keys(data[0]);
+      const csvContent = [
+        headers.join(','),
+        ...data.map(row => headers.map(header => `"${row[header] || ''}"`).join(','))
+      ].join('\n');
+      
+      // Download CSV
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `exact_delivery_orders_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      alert(`Exported ${data.length} exact delivery orders`);
+    } catch (error) {
+      console.error('Error exporting exact delivery orders:', error);
+      alert('Failed to export orders');
+    }
+  };
+
+  const handleExportNormalDelivery = async () => {
+    try {
+      const response = await ordersAPI.exportNormalDelivery({ status: statusFilter });
+      const data = response.data.data;
+      
+      if (data.length === 0) {
+        alert('No normal delivery orders to export');
+        return;
+      }
+      
+      // Convert to CSV
+      const headers = Object.keys(data[0]);
+      const csvContent = [
+        headers.join(','),
+        ...data.map(row => headers.map(header => `"${row[header] || ''}"`).join(','))
+      ].join('\n');
+      
+      // Download CSV
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `normal_delivery_orders_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      alert(`Exported ${data.length} normal delivery orders`);
+    } catch (error) {
+      console.error('Error exporting normal delivery orders:', error);
+      alert('Failed to export orders');
     }
   };
 
@@ -147,12 +257,26 @@ const AdminOrders = () => {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Manage Orders</h1>
             <p className="text-gray-600">View and update order statuses, delivery details</p>
           </div>
-          <button
-            onClick={() => navigate('/admin')}
-            className="px-4 py-2 text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg"
-          >
-            ← Back to Dashboard
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={handleExportExactDelivery}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+            >
+              📥 Export Exact Delivery
+            </button>
+            <button
+              onClick={handleExportNormalDelivery}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              📥 Export Normal Delivery
+            </button>
+            <button
+              onClick={() => navigate('/admin')}
+              className="px-4 py-2 text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg"
+            >
+              ← Back to Dashboard
+            </button>
+          </div>
         </motion.div>
 
         {/* Filter Buttons */}
@@ -186,6 +310,12 @@ const AdminOrders = () => {
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${statusFilter === 'Shipped' ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
             >
               Shipped ({orders.filter(o => o.orderStatus === 'Shipped').length})
+            </button>
+            <button 
+              onClick={() => setStatusFilter('Out for Delivery')} 
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${statusFilter === 'Out for Delivery' ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+            >
+              Out for Delivery ({orders.filter(o => o.orderStatus === 'Out for Delivery').length})
             </button>
             <button 
               onClick={() => setStatusFilter('Delivered')} 
@@ -421,6 +551,7 @@ const AdminOrders = () => {
                       <option value="Pending">Pending</option>
                       <option value="Processing">Processing</option>
                       <option value="Shipped">Shipped</option>
+                      <option value="Out for Delivery">Out for Delivery</option>
                       <option value="Delivered">Delivered</option>
                       <option value="Cancelled">Cancelled</option>
                     </select>
@@ -446,6 +577,30 @@ const AdminOrders = () => {
                     </div>
                   )}
 
+                  {/* Delivery Boy Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Assign Delivery Boy
+                    </label>
+                    <select
+                      value={selectedDeliveryBoy}
+                      onChange={(e) => handleDeliveryBoyChange(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    >
+                      <option value="">Select Delivery Boy (Optional)</option>
+                      {deliveryBoys.map((boy) => (
+                        <option key={boy._id} value={boy._id}>
+                          {boy.name} - {boy.deliveryBoyId} ({boy.phone})
+                        </option>
+                      ))}
+                    </select>
+                    {selectedDeliveryBoy && (
+                      <p className="mt-1 text-xs text-gray-500">
+                        Selecting a delivery boy will auto-fill the delivery agent details below
+                      </p>
+                    )}
+                  </div>
+
                   {/* Delivery Agent Name */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Delivery Agent Name</label>
@@ -455,6 +610,7 @@ const AdminOrders = () => {
                       onChange={(e) => setUpdateData({ ...updateData, deliveryAgentName: e.target.value })}
                       placeholder="Enter delivery agent name"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      readOnly={!!selectedDeliveryBoy}
                     />
                   </div>
 
@@ -467,6 +623,7 @@ const AdminOrders = () => {
                       onChange={(e) => setUpdateData({ ...updateData, deliveryAgentPhone: e.target.value })}
                       placeholder="Enter phone number"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      readOnly={!!selectedDeliveryBoy}
                     />
                   </div>
 

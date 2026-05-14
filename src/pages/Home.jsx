@@ -76,7 +76,7 @@ const Home = () => {
             className="text-center text-white w-full flex flex-col items-center"
           >
             <h1 className="text-xl sm:text-3xl md:text-6xl font-bold mb-3 md:mb-4 leading-tight">
-              Welcome to Alok General Store
+              Welcome to Shine And Glow
             </h1>
             <p className="text-sm sm:text-base md:text-2xl mb-4 md:mb-6 opacity-90">
               Your Trusted Shopping Destination
@@ -330,13 +330,20 @@ const Home = () => {
           {/* Gallery Grid */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {[
-              { url: 'https://i.ibb.co/GvwtkQ1C/ShopFour.jpg', span: 'col-span-2' },
-              { url: 'https://i.ibb.co/SDLNTWmt/Shop-Seven.jpg', span: 'md:col-span-2' },
-              { url: 'https://i.ibb.co/FLvqcX0S/ShopTwo.jpg', span: 'md:col-span-2 md:row-span-2' },
-              { url: 'https://i.ibb.co/gFbbyxB9/Shop-Three.jpg', span: '' },
-              { url: 'https://i.ibb.co/jZ3N2GC8/ShopSix.jpg', span: '' },
-              { url: 'https://i.ibb.co/N6YC4yrD/ShopOne.jpg', span: '' },
-              { url: 'https://i.ibb.co/LhkQ9G78/ShopFive.jpg', span: '' },
+              // { url: 'https://i.ibb.co/GvwtkQ1C/ShopFour.jpg', span: 'col-span-2' },
+              // { url: 'https://i.ibb.co/SDLNTWmt/Shop-Seven.jpg', span: 'md:col-span-2' },
+              // { url: 'https://i.ibb.co/FLvqcX0S/ShopTwo.jpg', span: 'md:col-span-2 md:row-span-2' },
+              // { url: 'https://i.ibb.co/gFbbyxB9/Shop-Three.jpg', span: '' },
+              // { url: 'https://i.ibb.co/jZ3N2GC8/ShopSix.jpg', span: '' },
+              // { url: 'https://i.ibb.co/N6YC4yrD/ShopOne.jpg', span: '' },
+              // { url: 'https://i.ibb.co/LhkQ9G78/ShopFive.jpg', span: '' },
+              { url: 'https://i.ibb.co/6033Bvtx/s1.jpg', span: 'col-span-2' },
+              { url: 'https://i.ibb.co/20GqCXPC/s5.jpg', span: 'md:col-span-2' },
+              { url: 'https://i.ibb.co/8nkSBBWm/s2.jpg', span: 'md:col-span-2 md:row-span-2' },
+              { url: 'https://i.ibb.co/cK5P5YF5/s3.jpg', span: '' },
+              { url: 'https://i.ibb.co/Q3QXYSTm/s6.jpg', span: '' },
+              { url: 'https://i.ibb.co/bR1WsfSH/s8.jpg', span: '' },
+              { url: 'https://i.ibb.co/fZ1HH4Z/s4.jpg', span: '' },
             ].map((image, index) => (
               <motion.div
                 key={index}

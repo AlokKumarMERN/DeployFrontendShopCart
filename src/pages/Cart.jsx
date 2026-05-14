@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { ordersAPI, productsAPI, couponsAPI } from '../api/api';
+import { ordersAPI, productsAPI, couponsAPI, pinCodesAPI } from '../api/api';
 import { useToast } from '../context/ToastContext';
 import { getGoogleDriveImageUrl } from '../utils/imageHelper';
 import LocationPicker from '../components/LocationPicker';
@@ -23,6 +23,12 @@ const Cart = () => {
   const [productsStock, setProductsStock] = useState({});
   const [loadingStock, setLoadingStock] = useState(true);
   
+  // Exact delivery states
+  const [exactDeliveryAvailable, setExactDeliveryAvailable] = useState(false);
+  const [useExactDelivery, setUseExactDelivery] = useState(false);
+  const [checkingPinCode, setCheckingPinCode] = useState(false);
+  const [pinCodeInfo, setPinCodeInfo] = useState(null);
+  
   // Coupon states
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
@@ -34,9 +40,13 @@ const Cart = () => {
     phone: '',
     addressLine1: '',
     addressLine2: '',
+    houseNo: '',
+    colony: '',
     city: '',
     state: '',
     zipCode: '',
+    latitude: '',
+    longitude: '',
   });
 
   // Handle location detection for address
@@ -49,10 +59,47 @@ const Cart = () => {
         state: locationData.state || prev.state,
         zipCode: locationData.zipCode || prev.zipCode,
         addressLine1: locationData.streetAddress || prev.addressLine1,
+        latitude: locationData.latitude || prev.latitude,
+        longitude: locationData.longitude || prev.longitude,
       };
       console.log('✅ Cart address updated:', updated);
+      
+      // Check pin code availability if zipCode is updated
+      if (locationData.zipCode) {
+        checkPinCodeAvailability(locationData.zipCode);
+      }
+      
       return updated;
     });
+  };
+
+  // Check if pin code supports exact delivery
+  const checkPinCodeAvailability = async (pincode) => {
+    if (!pincode || pincode.length < 6) {
+      setExactDeliveryAvailable(false);
+      setPinCodeInfo(null);
+      return;
+    }
+
+    try {
+      setCheckingPinCode(true);
+      const response = await pinCodesAPI.check(pincode);
+      
+      if (response.data.success && response.data.data.exactDeliveryAvailable) {
+        setExactDeliveryAvailable(true);
+        setPinCodeInfo(response.data.data);
+      } else {
+        setExactDeliveryAvailable(false);
+        setPinCodeInfo(null);
+        setUseExactDelivery(false);
+      }
+    } catch (error) {
+      console.error('Error checking pin code:', error);
+      setExactDeliveryAvailable(false);
+      setPinCodeInfo(null);
+    } finally {
+      setCheckingPinCode(false);
+    }
   };
 
   // Auto-close thank you modal after 2 seconds and redirect
@@ -255,9 +302,13 @@ const Cart = () => {
         phone: '',
         addressLine1: '',
         addressLine2: '',
+        houseNo: '',
+        colony: '',
         city: '',
         state: '',
         zipCode: '',
+        latitude: '',
+        longitude: '',
       });
     }
 
@@ -278,9 +329,13 @@ const Cart = () => {
       phone: '',
       addressLine1: '',
       addressLine2: '',
+      houseNo: '',
+      colony: '',
       city: '',
       state: '',
       zipCode: '',
+      latitude: '',
+      longitude: '',
     });
   };
 
@@ -298,6 +353,14 @@ const Cart = () => {
       return;
     }
 
+    // Validate exact delivery fields if exact delivery is selected
+    if (useExactDelivery) {
+      if (!address.houseNo || !address.colony) {
+        alert('House number and colony are required for exact delivery');
+        return;
+      }
+    }
+
     try {
       setPlacingOrder(true);
 
@@ -313,6 +376,7 @@ const Cart = () => {
           category: item.category || null,
         })),
         shippingAddress: address,
+        deliveryType: useExactDelivery ? 'exact' : 'normal',
         itemsTotal,
         deliveryFee,
         otherCharges,
@@ -842,12 +906,97 @@ const Cart = () => {
                       type="text"
                       placeholder="ZIP Code *"
                       value={address.zipCode}
-                      onChange={(e) =>
-                        setAddress({ ...address, zipCode: e.target.value })
-                      }
+                      onChange={(e) => {
+                        const zipCode = e.target.value;
+                        setAddress({ ...address, zipCode });
+                        // Check pin code availability when user types
+                        if (zipCode.length === 6) {
+                          checkPinCodeAvailability(zipCode);
+                        } else {
+                          setExactDeliveryAvailable(false);
+                          setPinCodeInfo(null);
+                          setUseExactDelivery(false);
+                        }
+                      }}
                       className="input-field"
                       required
                     />
+
+                    {/* Pin Code Status */}
+                    {address.zipCode.length === 6 && (
+                      <div className="mt-2">
+                        {checkingPinCode ? (
+                          <p className="text-sm text-gray-600">Checking pin code...</p>
+                        ) : exactDeliveryAvailable ? (
+                          <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <p className="text-sm text-green-800 font-medium">
+                              ✓ Exact delivery available for this pin code!
+                            </p>
+                            {pinCodeInfo && (
+                              <p className="text-xs text-green-700 mt-1">
+                                Estimated delivery: {pinCodeInfo.estimatedDeliveryDays} days
+                                {pinCodeInfo.exactDeliveryCharges > 0 && ` • Extra charges: ₹${pinCodeInfo.exactDeliveryCharges}`}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-600">
+                            Normal delivery available for this pin code
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Exact Delivery Checkbox */}
+                    {exactDeliveryAvailable && (
+                      <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
+                        <label className="flex items-start cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={useExactDelivery}
+                            onChange={(e) => setUseExactDelivery(e.target.checked)}
+                            className="mt-1 h-5 w-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                          />
+                          <div className="ml-3">
+                            <span className="font-medium text-gray-900">
+                              Use Exact Delivery
+                            </span>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Get your order delivered to your exact location with house number and colony details.
+                            </p>
+                          </div>
+                        </label>
+                      </div>
+                    )}
+
+                    {/* Exact Delivery Fields */}
+                    {useExactDelivery && (
+                      <div className="space-y-4 p-4 bg-yellow-50 border-2 border-yellow-200 rounded-lg">
+                        <p className="text-sm font-medium text-gray-900 mb-2">
+                          📍 Exact Delivery Details (Required)
+                        </p>
+                        <input
+                          type="text"
+                          placeholder="House Number / Flat Number *"
+                          value={address.houseNo}
+                          onChange={(e) =>
+                            setAddress({ ...address, houseNo: e.target.value })
+                          }
+                          className="input-field"
+                          required
+                        />
+                        <input
+                          type="text"
+                          placeholder="Colony / Society / Area Name *"
+                          value={address.colony}
+                          onChange={(e) =>
+                            setAddress({ ...address, colony: e.target.value })
+                          }
+                          className="input-field"
+                          required
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

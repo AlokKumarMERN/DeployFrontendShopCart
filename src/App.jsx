@@ -21,6 +21,8 @@ import AdminFilters from './pages/AdminFilters';
 import AdminCoupons from './pages/AdminCoupons';
 import AdminCustomers from './pages/AdminCustomers';
 import AdminReplacements from './pages/AdminReplacements';
+import AdminDeliveryBoys from './pages/AdminDeliveryBoys';
+import AdminPinCodes from './pages/AdminPinCodes';
 import GoogleCallback from './pages/auth/GoogleCallback';
 
 function App() {
@@ -31,6 +33,8 @@ function App() {
   
   // Hide footer on mobile for Home and Shopping pages
   const hideFooterOnMobile = location.pathname === '/' || location.pathname === '/shopping';
+  // Hide header/footer/bottom nav completely on Profile page
+  const hideLayoutOnProfile = location.pathname === '/profile';
 
   // Admin routes - no header, footer, or bottom nav
   if (isAdminRoute) {
@@ -47,6 +51,8 @@ function App() {
           <Route path="/admin/coupons" element={<AdminCoupons />} />
           <Route path="/admin/customers" element={<AdminCustomers />} />
           <Route path="/admin/replacements" element={<AdminReplacements />} />
+          <Route path="/admin/delivery-boys" element={<AdminDeliveryBoys />} />
+          <Route path="/admin/pincodes" element={<AdminPinCodes />} />
         </Routes>
       </div>
     );
@@ -55,7 +61,7 @@ function App() {
   return (
     <div className="flex flex-col min-h-screen">
       <ScrollToTop />
-      <Header />
+      {!hideLayoutOnProfile && <Header />}
       <main className="flex-1 lg:mb-0 mb-16">
         <Routes>
           <Route path="/" element={<Home />} />
@@ -71,10 +77,12 @@ function App() {
           <Route path="/auth/google/callback" element={<GoogleCallback />} />
         </Routes>
       </main>
-      <div className={hideFooterOnMobile ? 'hidden lg:block' : ''}>
-        <Footer />
-      </div>
-      <BottomNav />
+      {!hideLayoutOnProfile && (
+        <div className={hideFooterOnMobile ? 'hidden lg:block' : ''}>
+          <Footer />
+        </div>
+      )}
+      {!hideLayoutOnProfile && <BottomNav />}
     </div>
   );
 }

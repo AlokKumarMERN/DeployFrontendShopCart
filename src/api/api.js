@@ -89,6 +89,8 @@ export const ordersAPI = {
   updateStatus: (id, data) => api.put(`/orders/${id}/status`, data),
   cancel: (id, reason) => api.put(`/orders/${id}/cancel`, { reason }),
   getStats: () => api.get('/orders/admin/stats'),
+  exportExactDelivery: (params) => api.get('/orders/export/exact-delivery', { params }),
+  exportNormalDelivery: (params) => api.get('/orders/export/normal-delivery', { params }),
 };
 
 // Replacements API
@@ -153,6 +155,26 @@ export const customersAPI = {
   getById: (id) => api.get(`/customers/admin/${id}`),
   getStats: () => api.get('/customers/admin/stats'),
   matchCriteria: (criteria) => api.post('/customers/admin/match-criteria', criteria),
+};
+
+// Delivery Boys API (Admin)
+export const deliveryBoysAPI = {
+  getAll: () => api.get('/delivery-boys'),
+  getActive: () => api.get('/delivery-boys/active'),
+  getById: (id) => api.get(`/delivery-boys/${id}`),
+  create: (data) => api.post('/delivery-boys', data),
+  update: (id, data) => api.put(`/delivery-boys/${id}`, data),
+  delete: (id) => api.delete(`/delivery-boys/${id}`),
+};
+
+// Pin Codes API
+export const pinCodesAPI = {
+  getAll: () => api.get('/pincodes'),
+  check: (pincode) => api.get(`/pincodes/check/${pincode}`),
+  create: (data) => api.post('/pincodes', data),
+  update: (id, data) => api.put(`/pincodes/${id}`, data),
+  delete: (id) => api.delete(`/pincodes/${id}`),
+  bulkUpload: (pinCodes) => api.post('/pincodes/bulk', { pinCodes }),
 };
 
 export default api;

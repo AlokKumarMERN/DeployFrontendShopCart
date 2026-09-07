@@ -7,7 +7,6 @@ import { ordersAPI, authAPI, productsAPI, couponsAPI, replacementsAPI } from '..
 import { getGoogleDriveImageUrl } from '../utils/imageHelper';
 import LocationPicker from '../components/LocationPicker';
 import { useToast } from '../context/ToastContext';
-import html2pdf from 'html2pdf.js';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -31,6 +30,8 @@ const Profile = () => {
     city: '',
     state: '',
     zipCode: '',
+    latitude: '',
+    longitude: '',
   });
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewProduct, setReviewProduct] = useState(null);
@@ -141,6 +142,11 @@ const Profile = () => {
 
   // Invoice download function
   const handleDownloadInvoice = async (order) => {
+    if (order.orderStatus !== 'Delivered') {
+      addToast('Invoice is available only after delivery', 'error');
+      return;
+    }
+
     try {
       setDownloadingInvoice(order._id);
       const response = await ordersAPI.getInvoice(order._id);
@@ -148,61 +154,54 @@ const Profile = () => {
       
       // Generate HTML content
       const invoiceHTML = generateInvoiceHTML(invoiceData);
-      
-      // Create a temporary container for the HTML
-      const container = document.createElement('div');
-      container.innerHTML = invoiceHTML;
-      container.style.position = 'absolute';
-      container.style.left = '-9999px';
-      container.style.top = '0';
-      document.body.appendChild(container);
-      
-      // PDF options
-      const options = {
-        margin: 10,
-        filename: `Invoice-${invoiceData.invoiceNumber}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
-      
-      // Generate and download PDF
-      await html2pdf().set(options).from(container).save();
-      
-      // Cleanup
-      document.body.removeChild(container);
-      
-      addToast('Invoice downloaded successfully', 'success');
+
+      const htmlDocument = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Invoice-${invoiceData.invoiceNumber}</title>
+</head>
+<body style="margin:0; background:#f5f5f5;">
+${invoiceHTML}
+</body>
+</html>`;
+
+      const blob = new Blob([htmlDocument], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Invoice-${invoiceData.invoiceNumber}.html`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      addToast('Invoice HTML downloaded successfully', 'success');
     } catch (error) {
       console.error('Error downloading invoice:', error);
-      addToast('Failed to download invoice', 'error');
+      addToast(error.response?.data?.message || 'Failed to download invoice', 'error');
     } finally {
       setDownloadingInvoice(null);
     }
   };
 
   const generateInvoiceHTML = (invoice) => {
-    const orderStatusColors = {
-      'Pending': '#f59e0b',
-      'Processing': '#3b82f6',
-      'Shipped': '#8b5cf6',
-      'Delivered': '#22c55e',
-      'Cancelled': '#ef4444',
-    };
-    
-    const statusColor = orderStatusColors[invoice.orderStatus] || '#666';
-    const isCancelled = invoice.orderStatus === 'Cancelled';
-    const isDelivered = invoice.orderStatus === 'Delivered';
+    const statusColor = '#22c55e';
     const hasRefunds = invoice.hasRefunds || false;
+    const invoiceDate = invoice.invoiceDate || new Date();
+    const store = invoice.store || {};
 
-    const itemsHTML = invoice.items.map(item => {
+    const itemsHTML = invoice.items.map((item, index) => {
       const isRefunded = item.returnStatus === 'refunded';
       const rowStyle = isRefunded ? 'background: #fef2f2;' : '';
       return `
       <tr style="${rowStyle}">
+        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">${index + 1}</td>
         <td style="padding: 10px; border-bottom: 1px solid #eee;">
           ${item.name || 'Product'}
           ${item.size ? `<br><span style="font-size: 11px; color: #888;">Size: ${item.size}</span>` : ''}
+          ${item.category ? `<br><span style="font-size: 11px; color: #888;">Category: ${item.category}</span>` : ''}
           ${isRefunded ? '<br><span style="font-size: 11px; color: #ef4444; font-weight: 500;">⟳ Refunded</span>' : ''}
         </td>
         <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity || 1}</td>
@@ -255,67 +254,47 @@ const Profile = () => {
       `;
     }
 
-    // Cancellation section
-    let cancellationHTML = '';
-    if (isCancelled && invoice.cancellation) {
-      cancellationHTML = `
-      <div style="margin: 25px 0; padding: 15px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px;">
-        <h3 style="margin: 0 0 8px; color: #dc2626; font-size: 14px;">Order Cancelled</h3>
-        <p style="margin: 0; font-size: 13px; color: #991b1b;">
-          <strong>Reason:</strong> ${invoice.cancellation.reason || 'Not specified'}
-        </p>
-        <p style="margin: 5px 0 0; font-size: 12px; color: #888;">
-          Cancelled on: ${invoice.cancellation.cancelledAt ? new Date(invoice.cancellation.cancelledAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}
-        </p>
-      </div>
-      `;
-    }
-
-    // Document title based on status
-    let documentTitle = 'INVOICE';
-    let documentSubtitle = '';
-    if (isCancelled) {
-      documentTitle = 'CANCELLED ORDER';
-      documentSubtitle = '<p style="margin: 5px 0; color: #ef4444; font-weight: bold;">This order has been cancelled</p>';
-    } else if (!isDelivered) {
-      documentTitle = 'ORDER RECEIPT';
-      documentSubtitle = `<p style="margin: 5px 0; color: ${statusColor}; font-weight: 500;">Status: ${invoice.orderStatus}</p>`;
-    } else if (hasRefunds) {
-      documentTitle = 'INVOICE (WITH REFUNDS)';
-    }
+    const documentTitle = hasRefunds ? 'TAX INVOICE (WITH REFUNDS)' : 'TAX INVOICE';
 
     return `
 <div style="font-family: Arial, sans-serif; padding: 30px; max-width: 800px; margin: 0 auto; background: white;">
   <div style="text-align: center; margin-bottom: 25px; border-bottom: 2px solid ${statusColor}; padding-bottom: 15px;">
     <h1 style="margin: 0; color: #333; font-size: 28px;">${documentTitle}</h1>
-    ${documentSubtitle}
+    <p style="margin: 6px 0 0; color: #16a34a; font-weight: 600;">Status: ${invoice.orderStatus}</p>
     <p style="margin: 8px 0 0; color: #666;"><strong>Invoice No:</strong> ${invoice.invoiceNumber}</p>
+    <p style="margin: 5px 0; color: #666;"><strong>Invoice Date:</strong> ${new Date(invoiceDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
     <p style="margin: 5px 0; color: #666;"><strong>Order No:</strong> ${invoice.orderNumber}</p>
+    <p style="margin: 5px 0; color: #666;"><strong>Order ID:</strong> ${invoice.orderMeta?.orderId || ''}</p>
     <p style="margin: 5px 0; color: #666;"><strong>Order Date:</strong> ${new Date(invoice.orderDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-    ${isDelivered && invoice.deliveryDate ? `<p style="margin: 5px 0; color: #22c55e;"><strong>Delivered:</strong> ${new Date(invoice.deliveryDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</p>` : ''}
+    ${invoice.deliveryDate ? `<p style="margin: 5px 0; color: #22c55e;"><strong>Delivered:</strong> ${new Date(invoice.deliveryDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</p>` : ''}
   </div>
 
-  ${cancellationHTML}
-
   <div style="display: flex; justify-content: space-between; margin-bottom: 25px;">
+    <div style="width: 48%;">
+      <h3 style="margin: 0 0 10px; color: #333; border-bottom: 1px solid #ddd; padding-bottom: 5px; font-size: 14px;">Sold By</h3>
+      <p style="margin: 5px 0; color: #555; font-size: 13px;"><strong>${store.name || 'Alok General Store'}</strong></p>
+      <p style="margin: 5px 0; color: #555; font-size: 13px;">${store.address || ''}</p>
+      ${store.phone ? `<p style="margin: 5px 0; color: #555; font-size: 13px;"><strong>Phone:</strong> ${store.phone}</p>` : ''}
+      ${store.email ? `<p style="margin: 5px 0; color: #555; font-size: 13px;"><strong>Email:</strong> ${store.email}</p>` : ''}
+      ${store.gstin ? `<p style="margin: 5px 0; color: #555; font-size: 13px;"><strong>GSTIN:</strong> ${store.gstin}</p>` : ''}
+    </div>
     <div style="width: 48%;">
       <h3 style="margin: 0 0 10px; color: #333; border-bottom: 1px solid #ddd; padding-bottom: 5px; font-size: 14px;">Bill To</h3>
       <p style="margin: 5px 0; color: #555; font-size: 13px;"><strong>${invoice.customer?.name || 'Customer'}</strong></p>
       <p style="margin: 5px 0; color: #555; font-size: 13px;">${invoice.customer?.email || ''}</p>
       <p style="margin: 5px 0; color: #555; font-size: 13px;">${invoice.shippingAddress?.phone || ''}</p>
-    </div>
-    <div style="width: 48%;">
-      <h3 style="margin: 0 0 10px; color: #333; border-bottom: 1px solid #ddd; padding-bottom: 5px; font-size: 14px;">Ship To</h3>
       <p style="margin: 5px 0; color: #555; font-size: 13px;">${invoice.shippingAddress?.fullName || ''}</p>
       <p style="margin: 5px 0; color: #555; font-size: 13px;">${invoice.shippingAddress?.addressLine1 || ''}</p>
       ${invoice.shippingAddress?.addressLine2 ? `<p style="margin: 5px 0; color: #555; font-size: 13px;">${invoice.shippingAddress.addressLine2}</p>` : ''}
       <p style="margin: 5px 0; color: #555; font-size: 13px;">${invoice.shippingAddress?.city || ''}, ${invoice.shippingAddress?.state || ''} - ${invoice.shippingAddress?.zipCode || ''}</p>
+      <p style="margin: 5px 0; color: #555; font-size: 13px;"><strong>Place of Supply:</strong> ${invoice.orderMeta?.placeOfSupply || invoice.shippingAddress?.state || ''}</p>
     </div>
   </div>
 
   <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
     <thead>
       <tr>
+        <th style="background: #f5f5f5; padding: 10px; text-align: center; border-bottom: 2px solid #ddd; font-size: 13px; width: 48px;">#</th>
         <th style="background: #f5f5f5; padding: 10px; text-align: left; border-bottom: 2px solid #ddd; font-size: 13px;">Item</th>
         <th style="background: #f5f5f5; padding: 10px; text-align: center; border-bottom: 2px solid #ddd; font-size: 13px;">Qty</th>
         <th style="background: #f5f5f5; padding: 10px; text-align: right; border-bottom: 2px solid #ddd; font-size: 13px;">Price</th>
@@ -344,6 +323,16 @@ const Profile = () => {
       <span>Delivery Charges:</span>
       <span ${invoice.deliveryFeeRefunded ? 'style="text-decoration: line-through; color: #999;"' : ''}>${(invoice.deliveryFee || 0) > 0 ? '₹' + (invoice.deliveryFee || 0).toFixed(2) : 'FREE'}</span>
     </div>
+    ${(invoice.otherCharges || 0) > 0 ? `
+    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 13px;">
+      <span>Other Charges:</span>
+      <span>₹${(invoice.otherCharges || 0).toFixed(2)}</span>
+    </div>
+    ` : ''}
+    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 13px;">
+      <span>Tax:</span>
+      <span>${(invoice.taxAmount || 0) > 0 ? `₹${(invoice.taxAmount || 0).toFixed(2)}` : 'Included in item price'}</span>
+    </div>
     <div style="display: flex; justify-content: space-between; padding: 10px 0; font-size: 16px; font-weight: bold; color: #333; border-top: 2px solid #333; margin-top: 5px;">
       <span>Order Total:</span>
       <span ${hasRefunds ? 'style="text-decoration: line-through; color: #999;"' : ''}>₹${(invoice.grandTotal || 0).toFixed(2)}</span>
@@ -364,10 +353,11 @@ const Profile = () => {
     <p style="margin: 0;"><strong>Payment Method:</strong> ${invoice.paymentMethod || 'COD'}</p>
     <p style="margin: 5px 0 0;"><strong>Payment Status:</strong> <span style="color: ${invoice.paymentStatus === 'Paid' ? '#22c55e' : invoice.paymentStatus === 'Failed' ? '#ef4444' : '#f59e0b'}">${invoice.paymentStatus || 'Pending'}</span></p>
     <p style="margin: 5px 0 0;"><strong>Order Status:</strong> <span style="color: ${statusColor}; font-weight: 500;">${invoice.orderStatus}</span></p>
+    <p style="margin: 5px 0 0;"><strong>Delivery Type:</strong> ${invoice.deliveryType || 'normal'}</p>
   </div>
 
   <div style="text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd; color: #888; font-size: 12px;">
-    ${isCancelled ? '<p style="margin: 0; color: #ef4444;">This order was cancelled.</p>' : '<p style="margin: 0;">Thank you for your purchase!</p>'}
+    <p style="margin: 0;">Thank you for your purchase!</p>
     <p style="margin: 5px 0 0;">For any queries, please contact our support team.</p>
     <p style="margin: 5px 0 0; color: #aaa;">Generated on: ${new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
   </div>
@@ -614,6 +604,8 @@ const Profile = () => {
         city: '',
         state: '',
         zipCode: '',
+        latitude: '',
+        longitude: '',
       });
     }
     setShowAddressModal(true);
@@ -630,6 +622,8 @@ const Profile = () => {
         state: locationData.state || prev.state,
         zipCode: locationData.zipCode || prev.zipCode,
         addressLine1: locationData.streetAddress || prev.addressLine1,
+        latitude: locationData.latitude || prev.latitude,
+        longitude: locationData.longitude || prev.longitude,
       };
       console.log('✅ Updated address form:', updated);
       return updated;

@@ -124,7 +124,7 @@ const Header = () => {
             />
             <div className="hidden sm:block">
               <h1 className="text-xl font-bold text-primary-700">
-                Alok General Store
+                Shine and Glow
               </h1>
               <p className="text-xs text-gray-600">Your Shopping Destination</p>
             </div>

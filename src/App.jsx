@@ -21,6 +21,8 @@ import AdminFilters from './pages/AdminFilters';
 import AdminCoupons from './pages/AdminCoupons';
 import AdminCustomers from './pages/AdminCustomers';
 import AdminReplacements from './pages/AdminReplacements';
+import AdminDeliveryBoys from './pages/AdminDeliveryBoys';
+import AdminPinCodes from './pages/AdminPinCodes';
 import GoogleCallback from './pages/auth/GoogleCallback';
 
 function App() {
@@ -47,6 +49,8 @@ function App() {
           <Route path="/admin/coupons" element={<AdminCoupons />} />
           <Route path="/admin/customers" element={<AdminCustomers />} />
           <Route path="/admin/replacements" element={<AdminReplacements />} />
+          <Route path="/admin/delivery-boys" element={<AdminDeliveryBoys />} />
+          <Route path="/admin/pincodes" element={<AdminPinCodes />} />
         </Routes>
       </div>
     );

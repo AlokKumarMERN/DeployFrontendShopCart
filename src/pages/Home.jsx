@@ -76,7 +76,7 @@ const Home = () => {
             className="text-center text-white w-full flex flex-col items-center"
           >
             <h1 className="text-xl sm:text-3xl md:text-6xl font-bold mb-3 md:mb-4 leading-tight">
-              Welcome to Alok General Store
+              Welcome to Shine And Glow
             </h1>
             <p className="text-sm sm:text-base md:text-2xl mb-4 md:mb-6 opacity-90">
               Your Trusted Shopping Destination

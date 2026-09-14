@@ -33,6 +33,8 @@ function App() {
   
   // Hide footer on mobile for Home and Shopping pages
   const hideFooterOnMobile = location.pathname === '/' || location.pathname === '/shopping';
+  // Hide header/footer/bottom nav completely on Profile page
+  const hideLayoutOnProfile = location.pathname === '/profile';
 
   // Admin routes - no header, footer, or bottom nav
   if (isAdminRoute) {
@@ -59,7 +61,7 @@ function App() {
   return (
     <div className="flex flex-col min-h-screen">
       <ScrollToTop />
-      <Header />
+      {!hideLayoutOnProfile && <Header />}
       <main className="flex-1 lg:mb-0 mb-16">
         <Routes>
           <Route path="/" element={<Home />} />
@@ -75,10 +77,12 @@ function App() {
           <Route path="/auth/google/callback" element={<GoogleCallback />} />
         </Routes>
       </main>
-      <div className={hideFooterOnMobile ? 'hidden lg:block' : ''}>
-        <Footer />
-      </div>
-      <BottomNav />
+      {!hideLayoutOnProfile && (
+        <div className={hideFooterOnMobile ? 'hidden lg:block' : ''}>
+          <Footer />
+        </div>
+      )}
+      {!hideLayoutOnProfile && <BottomNav />}
     </div>
   );
 }

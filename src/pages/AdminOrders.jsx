@@ -270,12 +270,12 @@ const AdminOrders = () => {
             >
               📥 Export Normal Delivery
             </button>
-            <button
+            {/* <button
               onClick={() => window.open('https://logistics-route-optimization.onrender.com/', '_blank', 'noopener,noreferrer')}
               className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
             >
               🧭 Route Optimization
-            </button>
+            </button> */}
             <button
               onClick={() => navigate('/admin')}
               className="px-4 py-2 text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg"
